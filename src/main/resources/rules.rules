@@ -1,12 +1,54 @@
-@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix : <http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology/> .
 @prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix xml: <http://www.w3.org/XML/1998/namespace> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-# Rule for inferring equivalence (sameAs) based on owl:hasKey
-[hasKeyRule:
-    (?x owl:hasKey ?key),                     # ?x has a key ?key
-    (?y owl:hasKey ?key),                     # ?y has the same key ?key
-    (?x ?key ?keyValue),                     # ?x has a key value ?keyValue
-    (?y ?key ?keyValue)                      # ?y has the same key value ?keyValue
-        ->
-(?x rdf:sameAs ?y)                       # ?x and ?y are the same individual
-].
+## The OWL reasoner in Apache Jena Fuseki lacks support for some of the rules OWL 2 offers
+## Those rules are therefore re-implemented here
+
+# Implementation of serviceName being a key for Resource
+[resourceKey:
+    (?r1 rdf:type :Resource)
+    (?r2 rdf:type :Resource)
+    (?r1 :serviceName ?n)
+    (?r2 :serviceName ?n)
+    ->
+    (?r1 owl:sameAs ?r2)
+]
+
+# Implementation of version and name being a composite key for InstrumentationScope
+[instrumentationScopeKey:
+    (?i1 rdf:type :InstrumentationScope)
+    (?i2 rdf:type :InstrumentationScope)
+    (?i1 :name ?n)
+    (?i2 :name ?n)
+    (?i1 :version ?v)
+    (?i2 :version ?v)
+    ->
+    (?i1 owl:sameAs ?i2)
+]
+
+# Implementation of traceId being a key for Trace
+[traceKey:
+    (?t1 rdf:type :Trace)
+    (?t2 rdf:type :Trace)
+    (?t1 :traceId ?t)
+    (?t2 :traceId ?t)
+    ->
+    (?t1 owl:sameAs ?t2)
+]
+
+# Implementation of traceId and spanId being a composite key for Span
+[spanKey:
+    (?s1 rdf:type :Span)
+    (?s2 rdf:type :Span)
+    (?s1 :traceId ?t)
+    (?s2 :traceId ?t)
+    (?s1 :spanId ?t)
+    (?s2 :spanId ?t)
+    ->
+    (?s1 owl:sameAs ?s2)
+]
+
