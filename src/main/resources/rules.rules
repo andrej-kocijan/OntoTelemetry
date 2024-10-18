@@ -1,0 +1,12 @@
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# Rule for inferring equivalence (sameAs) based on owl:hasKey
+[hasKeyRule:
+    (?x owl:hasKey ?key),                     # ?x has a key ?key
+    (?y owl:hasKey ?key),                     # ?y has the same key ?key
+    (?x ?key ?keyValue),                     # ?x has a key value ?keyValue
+    (?y ?key ?keyValue)                      # ?y has the same key value ?keyValue
+        ->
+(?x rdf:sameAs ?y)                       # ?x and ?y are the same individual
+].

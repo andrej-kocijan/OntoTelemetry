@@ -1,0 +1,77 @@
+## Licensed under the terms of http://www.apache.org/licenses/LICENSE-2.0
+
+PREFIX :        <#>
+PREFIX fuseki:  <http://jena.apache.org/fuseki#>
+PREFIX rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX ja:      <http://jena.hpl.hp.com/2005/11/Assembler#>
+PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
+
+[] rdf:type fuseki:Server ;
+   fuseki:services ( :service ) .
+
+## Service description for "/dataset"
+## with a TDB2 dataset
+
+:service rdf:type fuseki:Service ;
+    fuseki:name "ds" ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:query ;
+        fuseki:name "sparql" ;
+        ## Set default-union-graph for this endpoint.
+        ## ja:context [ ja:cxtName "tdb:unionDefaultGraph" ; ja:cxtValue true ] ;
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:query ;
+        fuseki:name "query"
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:update ;
+        fuseki:name "update"
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:gsp-r ;
+        fuseki:name "get"
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:gsp-rw ;
+        fuseki:name "data"
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:patch ;
+        fuseki:name "patch"
+    ] ;
+    fuseki:endpoint [
+        fuseki:operation fuseki:upload ;
+        fuseki:name "load"
+    ] ;
+    fuseki:dataset :dataset_main ;
+    .
+
+## Set inferred model as the main dataset
+:dataset_main rdf:type ja:RDFDataset;
+    ja:defaultGraph :inf_model .
+
+## Run reasoner
+:inf_model rdf:type ja:InfModel;
+    ja:reasoner [ ja:reasonerURL <http://jena.hpl.hp.com/2003/OWLFBRuleReasoner> ];
+    ja:baseModel :inf_model1 .
+
+## Use custom rules
+:inf_model1 rdf:type ja:InfModel;
+    ja:reasoner [
+                    ja:reasonerUrl <http://jena.hpl.hp.com/2003/GenericRuleReasoner> ;
+                    ja:rulesFrom <rules.rules>
+                ] ;
+    ja:baseModel :base_model .
+
+## "Convert" the dataset into a TDB2 graph
+:base_model rdf:type tdb2:GraphTDB2;
+             tdb2:dataset :dataset_tdb2 .
+
+## Define a persistent TDB2 dataset and its location
+:dataset_tdb2 rdf:type  tdb2:DatasetTDB2 ;
+    tdb2:location "data" ;
+    ## Optional - with union default for query and update WHERE matching.
+    ## tdb2:unionDefaultGraph true ;
+    .
