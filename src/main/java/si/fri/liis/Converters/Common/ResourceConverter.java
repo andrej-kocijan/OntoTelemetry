@@ -41,8 +41,8 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
             if(attribute.getKey().equals("service.name") && attribute.getValue().hasStringValue())
                 continue;
 
-            Resource attributeResource = (new KeyValueConverter(model, attribute, "resourceAttribute")).getConvertedResource();
-            resource.addLiteral(attributeProperty, attributeResource);
+            Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
+            resource.addProperty(attributeProperty, attributeResource);
         }
     }
 }

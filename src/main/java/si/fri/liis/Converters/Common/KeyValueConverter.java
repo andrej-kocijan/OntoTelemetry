@@ -1,9 +1,8 @@
 package si.fri.liis.Converters.Common;
 
 import io.opentelemetry.proto.common.v1.AnyValue;
-import io.opentelemetry.proto.common.v1.ArrayValue;
-import org.apache.jena.rdf.model.Model;
 import io.opentelemetry.proto.common.v1.KeyValue;
+import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
@@ -12,16 +11,8 @@ import java.util.UUID;
 
 public class KeyValueConverter extends CommonConverter<KeyValue> {
 
-    private final String Iri;
-
     public KeyValueConverter(Model model, KeyValue source) {
         super(model, source);
-        this.Iri = "keyValue";
-    }
-
-    public KeyValueConverter(Model model, KeyValue source, String iri) {
-        super(model, source);
-        this.Iri = iri;
     }
 
     @Override
@@ -36,7 +27,7 @@ public class KeyValueConverter extends CommonConverter<KeyValue> {
 
     private Resource KeyValueHandler(KeyValue kv, Property keyProperty, Property valueProperty, Property keyValueProperty) {
 
-        Resource resource = this.model.createResource(ontoUri + Iri + UUID.randomUUID());
+        Resource resource = this.model.createResource(ontoUri + "keyValue" + UUID.randomUUID());
         resource.addProperty(RDF.type, keyValueProperty);
 
         resource.addLiteral(keyProperty, kv.getKey());
