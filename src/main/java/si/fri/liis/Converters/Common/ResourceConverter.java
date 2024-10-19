@@ -19,10 +19,10 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
 
         this.resource = this.model.createResource(ontoUri + "resource" + UUID.randomUUID());
 
-        Property resourceProperty = this.model.createProperty(ontoUri + "Resource");
-        Property attributeProperty = this.model.createProperty(ontoUri + "attribute");
-        Property droppedAttributesCountProperty = this.model.createProperty(ontoUri + "droppedAttributesCount");
-        Property serviceNameProperty = this.model.createProperty(ontoUri + "serviceName");
+        Property resourceProperty = this.model.createProperty(ontoUri, "Resource");
+        Property attributeProperty = this.model.createProperty(ontoUri, "attribute");
+        Property droppedAttributesCountProperty = this.model.createProperty(ontoUri, "droppedAttributesCount");
+        Property serviceNameProperty = this.model.createProperty(ontoUri, "serviceName");
 
         resource.addProperty(RDF.type, resourceProperty);
         resource.addLiteral(droppedAttributesCountProperty, this.source.getDroppedAttributesCount());

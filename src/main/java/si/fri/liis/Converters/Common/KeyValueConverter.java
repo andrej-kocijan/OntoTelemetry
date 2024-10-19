@@ -18,18 +18,18 @@ public class KeyValueConverter extends CommonConverter<KeyValue> {
     @Override
     public void convertToModel() {
 
-        model.createProperty(ontoUri + "KeyValue");
-        model.createProperty(ontoUri + "key");
-        model.createProperty(ontoUri + "value");
+        model.createProperty(ontoUri, "KeyValue");
+        model.createProperty(ontoUri, "key");
+        model.createProperty(ontoUri, "value");
 
         this.resource = KeyValueHandler(this.source);
     }
 
     private Resource KeyValueHandler(KeyValue kv) {
 
-        Property keyValueProperty = model.getProperty(ontoUri + "KeyValue");
-        Property keyProperty = model.getProperty(ontoUri + "key");
-        Property valueProperty = model.getProperty(ontoUri + "value");
+        Property keyValueProperty = model.createProperty(ontoUri, "KeyValue");
+        Property keyProperty = model.createProperty(ontoUri, "key");
+        Property valueProperty = model.createProperty(ontoUri, "value");
 
         Resource resource = this.model.createResource(ontoUri + "keyValue" + UUID.randomUUID());
         resource.addProperty(RDF.type, keyValueProperty);
@@ -56,7 +56,7 @@ public class KeyValueConverter extends CommonConverter<KeyValue> {
 
     public void primitiveValueHandler(AnyValue value, Resource resource) {
 
-        Property valueProperty = model.getProperty(ontoUri + "value");
+        Property valueProperty = model.createProperty(ontoUri, "value");
 
         if (value.hasStringValue())
             resource.addLiteral(valueProperty, value.getStringValue());
