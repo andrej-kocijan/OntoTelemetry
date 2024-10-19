@@ -7,6 +7,6 @@ import org.springframework.stereotype.Service;
 public class MetricsService {
 
     public void HandleMetric(MetricsData metricsData) {
-        System.out.println(metricsData.toString());
+
     }
 }

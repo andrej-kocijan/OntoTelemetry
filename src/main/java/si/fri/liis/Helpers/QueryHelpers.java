@@ -6,7 +6,7 @@ import org.apache.jena.shared.PrefixMapping;
 
 public class QueryHelpers {
 
-    private static PrefixMapping getPrefixes() {
+    public static PrefixMapping getPrefixes() {
 
         return PrefixMapping.Factory.create()
                 .setNsPrefix("", "http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology/")
