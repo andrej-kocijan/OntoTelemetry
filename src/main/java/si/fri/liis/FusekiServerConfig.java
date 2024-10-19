@@ -7,7 +7,6 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdfconnection.RDFConnection;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.rdfconnection.RDFConnectionRemote;
-import org.apache.jena.rdfconnection.RDFConnectionRemoteBuilder;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
 import org.slf4j.Logger;
@@ -45,10 +44,7 @@ public class FusekiServerConfig {
 
     private boolean ontologyLoaded() {
 
-        RDFConnectionRemoteBuilder connBuilder = RDFConnectionFuseki
-                .service("http://localhost:3030/ds/query");
-
-        try (RDFConnection conn = connBuilder.build()) {
+        try (RDFConnection conn = RDFConnectionFuseki.service("http://localhost:3030/ds/query").build()) {
             Query q = QueryHelpers.createQuery("""
                     ASK { <http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology> rdf:type owl:Ontology . }
                     """);

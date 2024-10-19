@@ -89,6 +89,7 @@
 ]
 
 # Infer spans linked to one another via the Link class
+# The inverse is then inferred via the OWL reasoner
 [spanLinkingRule:
     (?mainSpan rdf:type :Span)
     (?span rdf:type :Span)
