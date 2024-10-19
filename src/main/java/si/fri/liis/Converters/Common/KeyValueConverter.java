@@ -18,14 +18,18 @@ public class KeyValueConverter extends CommonConverter<KeyValue> {
     @Override
     public void convertToModel() {
 
-        Property keyValueProperty = model.createProperty(ontoUri + "KeyValue");
-        Property keyProperty = model.createProperty(ontoUri + "key");
-        Property valueProperty = model.createProperty(ontoUri + "value");
+        model.createProperty(ontoUri + "KeyValue");
+        model.createProperty(ontoUri + "key");
+        model.createProperty(ontoUri + "value");
 
-        this.resource = KeyValueHandler(this.source, keyProperty, valueProperty, keyValueProperty);
+        this.resource = KeyValueHandler(this.source);
     }
 
-    private Resource KeyValueHandler(KeyValue kv, Property keyProperty, Property valueProperty, Property keyValueProperty) {
+    private Resource KeyValueHandler(KeyValue kv) {
+
+        Property keyValueProperty = model.getProperty(ontoUri + "KeyValue");
+        Property keyProperty = model.getProperty(ontoUri + "key");
+        Property valueProperty = model.getProperty(ontoUri + "value");
 
         Resource resource = this.model.createResource(ontoUri + "keyValue" + UUID.randomUUID());
         resource.addProperty(RDF.type, keyValueProperty);
@@ -35,22 +39,24 @@ public class KeyValueConverter extends CommonConverter<KeyValue> {
         AnyValue value = kv.getValue();
 
         if (value.hasStringValue() || value.hasDoubleValue() || value.hasBoolValue() || value.hasBytesValue() || value.hasIntValue())
-            primitiveValueHandler(value, resource, valueProperty);
+            primitiveValueHandler(value, resource);
 
         if (value.hasArrayValue())
             for (AnyValue v : value.getArrayValue().getValuesList())
-                primitiveValueHandler(v, resource, valueProperty);
+                primitiveValueHandler(v, resource);
 
         if (value.hasKvlistValue())
             for(KeyValue kvv : value.getKvlistValue().getValuesList()) {
-                Resource kvResource = KeyValueHandler(kvv, keyProperty, valueProperty, keyValueProperty);
+                Resource kvResource = KeyValueHandler(kvv);
                 resource.addProperty(valueProperty, kvResource);
             }
 
         return resource;
     }
 
-    public void primitiveValueHandler(AnyValue value, Resource resource, Property valueProperty) {
+    public void primitiveValueHandler(AnyValue value, Resource resource) {
+
+        Property valueProperty = model.getProperty(ontoUri + "value");
 
         if (value.hasStringValue())
             resource.addLiteral(valueProperty, value.getStringValue());
