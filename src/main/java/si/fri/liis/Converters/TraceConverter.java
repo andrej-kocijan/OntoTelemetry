@@ -152,22 +152,60 @@ public class TraceConverter extends Converter<TracesData> {
             }
             resource.addLiteral(droppedAttributesCountProperty, span.getDroppedAttributesCount());
 
-            // handle Events
             List<Resource> eventResources = eventsConverter(span.getEventsList());
             for(Resource eventResource : eventResources)
                 resource.addProperty(eventProperty, eventResource);
             resource.addLiteral(droppedEventsCountProperty, span.getDroppedEventsCount());
 
-            //handle Links
+            List<Resource> linkResources = linksConverter(span.getLinksList(), traceIds);
+            for(Resource linkResource : linkResources)
+                resource.addProperty(linkProperty, linkResource);
             resource.addLiteral(droppedLinksCountProperty, span.getDroppedLinksCount());
 
-            //handle Status
             Resource statusResource = statusConverter(span.getStatus());
             resource.addProperty(statusProperty, statusResource);
         }
 
-
         // create :Trace-s if needed
+
+        return resources;
+    }
+
+    public List<Resource> linksConverter(List<Span.Link> links, Set<String> traceIds) {
+
+        ArrayList<Resource> resources = new ArrayList<>();
+
+        Property linkProperty = model.createProperty(ontoUri, "Link");
+        Property traceIdProperty = model.createProperty(ontoUri, "traceId");
+        Property spanIdProperty = model.createProperty(ontoUri, "spanId");
+        Property traceStateProperty = model.createProperty(ontoUri, "traceState");
+        Property attributeProperty = model.createProperty(ontoUri, "attribute");
+        Property droppedAttributesCountProperty = model.createProperty(ontoUri, "droppedAttributesCount");
+        Property flagsProperty = model.createProperty(ontoUri, "flags");
+
+        for (Span.Link link : links) {
+
+            Resource resource = model.createResource(ontoUri + "link" + UUID.randomUUID());
+            resource.addProperty(RDF.type, linkProperty);
+
+            String tracedId = HexFormat.of().formatHex(link.getTraceId().toByteArray());
+            traceIds.add(tracedId);
+            resource.addLiteral(traceIdProperty, tracedId);
+
+            String spanId = HexFormat.of().formatHex(link.getSpanId().toByteArray());
+            resource.addLiteral(spanIdProperty, spanId);
+
+            resource.addLiteral(traceStateProperty, link.getTraceState());
+
+
+            for(KeyValue attribute : link.getAttributesList()) {
+                Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
+                resource.addProperty(attributeProperty, attributeResource);
+            }
+            resource.addLiteral(droppedAttributesCountProperty, link.getDroppedAttributesCount());
+
+            resource.addLiteral(flagsProperty, link.getFlags());
+        }
 
         return resources;
     }
