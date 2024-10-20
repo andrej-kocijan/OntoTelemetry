@@ -10,6 +10,7 @@ import org.apache.jena.riot.RDFLanguages;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
@@ -19,8 +20,10 @@ import si.fri.liis.Helpers.RDFConnectionFusekiFactory;
 @Component
 public class FusekiServerConfig {
 
+    @Value("${ontology.url}")
+    private static String ONTOLOGY_URL;
+
     private static final Logger logger = LoggerFactory.getLogger(FusekiServerConfig.class);
-    private static final String ONTOLOGY_URL = "https://raw.githubusercontent.com/andrej-kocijan/opentelemetry-ontology/refs/heads/main/OpenTelemetry.ttl";
 
     private final RDFConnectionFusekiFactory connFusekiFactory;
 
