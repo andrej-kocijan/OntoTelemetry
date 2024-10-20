@@ -97,7 +97,7 @@ public class TraceConverter extends Converter<TracesData> {
     private List<Resource> convertSpans(List<Span> spans) {
 
         ArrayList<Resource> resources = new ArrayList<>();
-        Set<String> traceIds = new HashSet<String>();
+        Set<String> traceIds = new HashSet<>();
 
         Property spanProperty = model.createProperty(ontoUri, "Span");
         Property traceIdProperty = model.createProperty(ontoUri, "traceId");
@@ -153,6 +153,9 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addLiteral(droppedAttributesCountProperty, span.getDroppedAttributesCount());
 
             // handle Events
+            List<Resource> eventResources = eventsConverter(span.getEventsList());
+            for(Resource eventResource : eventResources)
+                resource.addProperty(eventProperty, eventResource);
             resource.addLiteral(droppedEventsCountProperty, span.getDroppedEventsCount());
 
             //handle Links
@@ -165,6 +168,33 @@ public class TraceConverter extends Converter<TracesData> {
 
 
         // create :Trace-s if needed
+
+        return resources;
+    }
+
+    public List<Resource> eventsConverter(List<Span.Event> events) {
+
+        ArrayList<Resource> resources = new ArrayList<>();
+
+        Property eventProperty = model.createProperty(ontoUri, "Event");
+        Property timeUnixNanoProperty = model.createProperty(ontoUri, "timeUnixNano");
+        Property nameProperty = model.createProperty(ontoUri, "name");
+        Property attributeProperty = model.createProperty(ontoUri, "attribute");
+        Property droppedAttributesCountProperty = model.createProperty(ontoUri, "droppedAttributesCount");
+
+        for (Span.Event event : events) {
+
+            Resource resource = model.createResource(ontoUri + "event" + UUID.randomUUID());
+            resource.addProperty(RDF.type, eventProperty);
+            resource.addLiteral(timeUnixNanoProperty, event.getTimeUnixNano());
+            resource.addLiteral(nameProperty, event.getName());
+
+            for(KeyValue attribute : event.getAttributesList()) {
+                Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
+                resource.addProperty(attributeProperty, attributeResource);
+            }
+            resource.addLiteral(droppedAttributesCountProperty, event.getDroppedAttributesCount());
+        }
 
         return resources;
     }
