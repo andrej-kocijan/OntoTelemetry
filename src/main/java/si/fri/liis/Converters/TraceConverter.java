@@ -1,10 +1,7 @@
 package si.fri.liis.Converters;
 
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.trace.v1.ResourceSpans;
-import io.opentelemetry.proto.trace.v1.ScopeSpans;
-import io.opentelemetry.proto.trace.v1.Span;
-import io.opentelemetry.proto.trace.v1.TracesData;
+import io.opentelemetry.proto.trace.v1.*;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
@@ -162,10 +159,32 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addLiteral(droppedLinksCountProperty, span.getDroppedLinksCount());
 
             //handle Status
+            Resource statusResource = statusConverter(span.getStatus());
+            resource.addProperty(statusProperty, statusResource);
         }
 
 
+        // create :Trace-s if needed
 
         return resources;
+    }
+
+    public Resource statusConverter(Status status) {
+
+        Property statusProperty = model.createProperty(ontoUri, "Status");
+        Property messageProperty = model.createProperty(ontoUri, "message");
+        Property codeProperty = model.createProperty(ontoUri, "code");
+
+        Resource resource = model.createResource(ontoUri + "Status" + UUID.randomUUID());
+        resource.addProperty(RDF.type, statusProperty);
+        resource.addLiteral(messageProperty, status.getMessage());
+
+        switch (status.getCode()) {
+            case STATUS_CODE_OK -> resource.addProperty(codeProperty, model.createResource(ontoUri + "STATUS_CODE_OK"));
+            case STATUS_CODE_ERROR -> resource.addProperty(codeProperty, model.createResource(ontoUri + "STATUS_CODE_ERROR"));
+            default -> resource.addProperty(codeProperty, model.createResource(ontoUri + "STATUS_CODE_UNSET"));
+        }
+
+        return resource;
     }
 }
