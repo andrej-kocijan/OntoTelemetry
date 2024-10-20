@@ -1,5 +1,6 @@
 package si.fri.liis.Converters;
 
+import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.proto.trace.v1.Span;
@@ -8,11 +9,10 @@ import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Converters.Common.InstrumentationScopeConverter;
+import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class TraceConverter extends Converter<TracesData> {
 
@@ -100,6 +100,69 @@ public class TraceConverter extends Converter<TracesData> {
     private List<Resource> convertSpans(List<Span> spans) {
 
         ArrayList<Resource> resources = new ArrayList<>();
+        Set<String> traceIds = new HashSet<String>();
+
+        Property spanProperty = model.createProperty(ontoUri, "Span");
+        Property traceIdProperty = model.createProperty(ontoUri, "traceId");
+        Property spanIdProperty = model.createProperty(ontoUri, "spanId");
+        Property traceStateProperty = model.createProperty(ontoUri, "traceState");
+        Property parentSpanIdProperty = model.createProperty(ontoUri, "parentSpanId");
+        Property flagsProperty = model.createProperty(ontoUri, "flags");
+        Property nameProperty = model.createProperty(ontoUri, "name");
+        Property kindProperty = model.createProperty(ontoUri, "kind");
+        Property startTimeUnixNanoProperty = model.createProperty(ontoUri, "startTimeUnixNano");
+        Property endTimeUnixNanoProperty = model.createProperty(ontoUri, "endTimeUnixNano");
+        Property attributeProperty = model.createProperty(ontoUri, "attribute");
+        Property droppedAttributesCountProperty = model.createProperty(ontoUri, "droppedAttributesCount");
+        Property eventProperty = model.createProperty(ontoUri, "event");
+        Property droppedEventsCountProperty = model.createProperty(ontoUri, "droppedEventsCount");
+        Property linkProperty = model.createProperty(ontoUri, "link");
+        Property droppedLinksCountProperty = model.createProperty(ontoUri, "droppedLinksCount");
+        Property statusProperty = model.createProperty(ontoUri, "status");
+
+        for(Span span : spans) {
+
+            String tracedId = HexFormat.of().formatHex(span.getTraceId().toByteArray());
+            String spanId = HexFormat.of().formatHex(span.getSpanId().toByteArray());
+
+            Resource resource = model.createResource(ontoUri + "span" + tracedId + "-" + spanId + "-" + UUID.randomUUID().toString().split("-")[0]);
+            resource.addProperty(RDF.type, spanProperty);
+
+            resource.addLiteral(traceIdProperty, tracedId);
+            traceIds.add(tracedId);
+
+            resource.addLiteral(spanIdProperty, spanId);
+            resource.addLiteral(traceStateProperty, span.getTraceState());
+            resource.addLiteral(parentSpanIdProperty, HexFormat.of().formatHex(span.getParentSpanId().toByteArray()));
+            resource.addLiteral(flagsProperty, span.getFlags());
+            resource.addLiteral(nameProperty, span.getName());
+
+            switch (span.getKind()) {
+                case SPAN_KIND_INTERNAL -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_INTERNAL"));
+                case SPAN_KIND_SERVER -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_SERVER"));
+                case SPAN_KIND_CLIENT -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_CLIENT"));
+                case SPAN_KIND_PRODUCER -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_PRODUCER"));
+                case SPAN_KIND_CONSUMER -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_CONSUMER"));
+                default -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_UNSPECIFIED"));
+            }
+
+            resource.addLiteral(startTimeUnixNanoProperty, span.getStartTimeUnixNano());
+            resource.addLiteral(endTimeUnixNanoProperty, span.getEndTimeUnixNano());
+
+            for(KeyValue attribute : span.getAttributesList()) {
+                Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
+                resource.addProperty(attributeProperty, attributeResource);
+            }
+            resource.addLiteral(droppedAttributesCountProperty, span.getDroppedAttributesCount());
+
+            // handle Events
+            resource.addLiteral(droppedEventsCountProperty, span.getDroppedEventsCount());
+
+            //handle Links
+            resource.addLiteral(droppedLinksCountProperty, span.getDroppedLinksCount());
+
+            //handle Status
+        }
 
 
 

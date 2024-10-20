@@ -3,12 +3,10 @@ package si.fri.liis.Helpers;
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
 import org.apache.jena.shared.PrefixMapping;
-import org.springframework.beans.factory.annotation.Value;
 
 public class QueryHelpers {
 
-    @Value("${ontology.url}")
-    private static String ONTOLOGY_URL;
+    private final static String ONTOLOGY_URL = "https://raw.githubusercontent.com/andrej-kocijan/opentelemetry-ontology/refs/heads/main/OpenTelemetry.ttl";
 
     public static PrefixMapping getPrefixes() {
 

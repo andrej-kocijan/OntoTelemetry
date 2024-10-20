@@ -21,7 +21,7 @@ import si.fri.liis.Helpers.RDFConnectionFusekiFactory;
 public class FusekiServerConfig {
 
     @Value("${ontology.url}")
-    private static String ONTOLOGY_URL;
+    private String ONTOLOGY_URL;
 
     private static final Logger logger = LoggerFactory.getLogger(FusekiServerConfig.class);
 
