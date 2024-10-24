@@ -1,5 +1,6 @@
 package si.fri.liis.Converters;
 
+import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.metrics.v1.Metric;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
@@ -9,6 +10,7 @@ import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Converters.Common.InstrumentationScopeConverter;
+import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
 
 import java.util.ArrayList;
@@ -33,7 +35,7 @@ public class MetricConverter extends Converter<MetricsData> {
         Property resourceMetricProperty = model.createProperty(ontoUri, "resourceMetric");
 
         List<Resource> resourceMetrics = convertResourceMetrics();
-        for(Resource resourceMetric: resourceMetrics)
+        for (Resource resourceMetric : resourceMetrics)
             resource.addProperty(resourceMetricProperty, resourceMetric);
     }
 
@@ -47,7 +49,7 @@ public class MetricConverter extends Converter<MetricsData> {
         Property resourceProperty = model.createProperty(ontoUri, "resource");
         Property scopeMetricProperty = model.createProperty(ontoUri, "scopeMetric");
 
-        for(ResourceMetrics resourceMetrics : resourceMetricsList) {
+        for (ResourceMetrics resourceMetrics : resourceMetricsList) {
 
             Resource resourceMetricResource = model.createResource(ontoUri + "resourceMetric" + UUID.randomUUID());
             resourceMetricResource.addProperty(RDF.type, resourceMetricsProperty);
@@ -58,7 +60,7 @@ public class MetricConverter extends Converter<MetricsData> {
 
             List<Resource> scopeMetricsResources = convertScopeMetrics(resourceMetrics.getScopeMetricsList());
 
-            for(Resource smr : scopeMetricsResources)
+            for (Resource smr : scopeMetricsResources)
                 resourceMetricResource.addProperty(scopeMetricProperty, smr);
 
             resources.add(resourceMetricResource);
@@ -76,7 +78,7 @@ public class MetricConverter extends Converter<MetricsData> {
         Property scopeProperty = model.createProperty(ontoUri, "scope");
         Property metricProperty = model.createProperty(ontoUri, "metric");
 
-        for(ScopeMetrics sm : scopeMetrics) {
+        for (ScopeMetrics sm : scopeMetrics) {
 
             Resource resource = model.createResource(ontoUri + "scopeMetrics" + UUID.randomUUID());
             resource.addProperty(RDF.type, scopeMetricsProperty);
@@ -87,7 +89,7 @@ public class MetricConverter extends Converter<MetricsData> {
             resource.addProperty(scopeProperty, instrumentationScopeResource);
 
             List<Resource> spanResources = convertMetrics(sm.getMetricsList());
-            for(Resource sr : spanResources)
+            for (Resource sr : spanResources)
                 resource.addProperty(metricProperty, sr);
 
             resources.add(resource);
@@ -99,7 +101,39 @@ public class MetricConverter extends Converter<MetricsData> {
     private List<Resource> convertMetrics(List<Metric> metrics) {
         ArrayList<Resource> resources = new ArrayList<>();
 
+        Property metricProperty = model.createProperty(ontoUri, "Metric");
+        Property nameProperty = model.createProperty(ontoUri, "name");
+        Property descriptionProperty = model.createProperty(ontoUri, "description");
+        Property unitProperty = model.createProperty(ontoUri, "unit");
+        Property dataProperty = model.createProperty(ontoUri, "data");
+        Property metadataProperty = model.createProperty(ontoUri, "metadata");
+
+        for (Metric metric : metrics) {
+
+            Resource resource = model.createResource(ontoUri + "metric" + UUID.randomUUID());
+            resource.addProperty(RDF.type, metricProperty);
+
+            resource.addLiteral(nameProperty, metric.getName());
+            resource.addLiteral(descriptionProperty, metric.getDescription());
+            resource.addLiteral(unitProperty, metric.getUnit());
+
+            Resource dataResource = convertMetricData(metric);
+            resource.addProperty(dataProperty, dataResource);
+
+            for (KeyValue metadata : metric.getMetadataList()) {
+                Resource metadataResource = (new KeyValueConverter(model, metadata)).getConvertedResource();
+                resource.addProperty(metadataProperty, metadataResource);
+            }
+        }
+
         return resources;
+    }
+
+    private Resource convertMetricData(Metric metric) {
+        Resource resource = model.createResource(ontoUri + "metricData" + UUID.randomUUID());
+
+
+        return resource;
     }
 
 }
