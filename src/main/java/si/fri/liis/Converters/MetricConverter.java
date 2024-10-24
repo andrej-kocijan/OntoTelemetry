@@ -1,10 +1,7 @@
 package si.fri.liis.Converters;
 
 import io.opentelemetry.proto.common.v1.KeyValue;
-import io.opentelemetry.proto.metrics.v1.Metric;
-import io.opentelemetry.proto.metrics.v1.MetricsData;
-import io.opentelemetry.proto.metrics.v1.ResourceMetrics;
-import io.opentelemetry.proto.metrics.v1.ScopeMetrics;
+import io.opentelemetry.proto.metrics.v1.*;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
@@ -132,8 +129,57 @@ public class MetricConverter extends Converter<MetricsData> {
     private Resource convertMetricData(Metric metric) {
         Resource resource = model.createResource(ontoUri + "metricData" + UUID.randomUUID());
 
+        Property typeProperty;
+        Property dataPointProperty  = model.createProperty(ontoUri, "dataPoint");
+        Property aggregationTemporalityProperty  = model.createProperty(ontoUri, "aggregationTemporality");
+
+        List<Resource> dataPoints = new ArrayList<>();
+        Resource aggregationTemporalityResource = null;
+
+        if (metric.hasGauge()) {
+            typeProperty = model.createProperty(ontoUri, "Gauge");
+
+        } else if (metric.hasSum()) {
+            typeProperty = model.createProperty(ontoUri, "Sum");
+            Property isMonotonicProperty = model.createProperty(ontoUri, "isMonotonic");
+            resource.addLiteral(isMonotonicProperty, metric.getSum().getIsMonotonic());
+            aggregationTemporalityResource = convertAggregationTemporality(metric.getSum().getAggregationTemporality());
+
+        } else if (metric.hasHistogram()) {
+            typeProperty = model.createProperty(ontoUri, "Histogram");
+            aggregationTemporalityResource = convertAggregationTemporality(metric.getHistogram().getAggregationTemporality());
+
+        } else if (metric.hasExponentialHistogram()) {
+            typeProperty = model.createProperty(ontoUri, "ExponentialHistogram");
+            aggregationTemporalityResource = convertAggregationTemporality(metric.getExponentialHistogram().getAggregationTemporality());
+
+        } else if (metric.hasSummary()) {
+            typeProperty = model.createProperty(ontoUri, "Summary");
+
+        } else {
+            typeProperty = model.createProperty(ontoUri, "MetricData");
+            dataPoints = new ArrayList<>();
+        }
+
+        resource.addProperty(RDF.type, typeProperty);
+
+        for(Resource dp : dataPoints)
+            resource.addProperty(dataPointProperty, dp);
+
+        if(aggregationTemporalityResource != null)
+            resource.addProperty(aggregationTemporalityProperty, aggregationTemporalityResource);
 
         return resource;
+    }
+
+    private Resource convertAggregationTemporality(AggregationTemporality aggregationTemporality) {
+
+        return switch (aggregationTemporality) {
+            case AGGREGATION_TEMPORALITY_UNSPECIFIED -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_UNSPECIFIED");
+            case AGGREGATION_TEMPORALITY_DELTA -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_DELTA");
+            case AGGREGATION_TEMPORALITY_CUMULATIVE -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_CUMULATIVE");
+            default -> null;
+        };
     }
 
 }
