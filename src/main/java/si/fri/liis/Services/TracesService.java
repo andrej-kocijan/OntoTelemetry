@@ -1,6 +1,7 @@
 package si.fri.liis.Services;
 
 import io.opentelemetry.proto.trace.v1.TracesData;
+import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,8 +23,12 @@ public class TracesService {
 
     public void HandleTrace(TracesData tracesData) {
 
-        TraceConverter tc = new TraceConverter(tracesData);
-        tc.getConvertedModel().write(System.out, "TURTLE");
-        System.out.println("------------------------------------------------------");
+        try (RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()) {
+            TraceConverter tc = new TraceConverter(tracesData, conn);
+            tc.getConvertedModel().write(System.out, "TURTLE");
+            System.out.println("------------------------------------------------------");
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
     }
 }

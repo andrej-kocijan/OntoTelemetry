@@ -4,17 +4,19 @@ import io.opentelemetry.proto.common.v1.KeyValue;
 import io.opentelemetry.proto.trace.v1.*;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Converters.Common.InstrumentationScopeConverter;
 import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
+import si.fri.liis.Helpers.TraceHelpers;
 
 import java.util.*;
 
 public class TraceConverter extends Converter<TracesData> {
 
-    public TraceConverter(TracesData tracesData) {
-        super(tracesData);
+    public TraceConverter(TracesData source, RDFConnectionFuseki conn) {
+        super(source, conn);
     }
 
     @Override
@@ -166,7 +168,7 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addProperty(statusProperty, statusResource);
         }
 
-        // create :Trace-s if needed
+        TraceHelpers.CreateMissingTraces(traceIds, model, conn, ontoUri);
 
         return resources;
     }
