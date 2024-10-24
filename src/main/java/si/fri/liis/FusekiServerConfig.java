@@ -7,6 +7,7 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.system.Txn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import si.fri.liis.Helpers.QueryHelpers;
 import si.fri.liis.Helpers.RDFConnectionFusekiFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
 public class FusekiServerConfig {
@@ -59,7 +62,10 @@ public class FusekiServerConfig {
                     ASK { <http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology> rdf:type owl:Ontology . }
                     """);
 
-            return conn.queryAsk(q);
+            AtomicBoolean ontologyLoaded = new AtomicBoolean(false);
+            Txn.executeRead(conn, () -> ontologyLoaded.set(conn.queryAsk(q)));
+
+            return ontologyLoaded.get();
 
         } catch (Exception e) {
             logger.error("Error while checking for ontology: {}", e.getMessage());
@@ -81,7 +87,7 @@ public class FusekiServerConfig {
                 logger.error("Error while reading ontology: {}", e.getMessage());
             }
 
-            conn.load(model);
+            Txn.executeWrite(conn, () -> conn.load(model));
             logger.info("Ontology loaded successfully into Fuseki.");
         } catch (Exception e) {
             logger.error("Could not load ontology: {}", e.getMessage());
