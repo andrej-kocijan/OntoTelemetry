@@ -152,6 +152,7 @@ public class MetricConverter extends Converter<MetricsData> {
         } else if (metric.hasHistogram()) {
             typeProperty = model.createProperty(ontoUri, "Histogram");
             aggregationTemporalityResource = convertAggregationTemporality(metric.getHistogram().getAggregationTemporality());
+            dataPoints = convertHistogramDataPoints(metric.getHistogram().getDataPointsList());
 
         } else if (metric.hasExponentialHistogram()) {
             typeProperty = model.createProperty(ontoUri, "ExponentialHistogram");
@@ -228,6 +229,49 @@ public class MetricConverter extends Converter<MetricsData> {
             List<Resource> exemplarResources = convertExemplars(numberDataPoint.getExemplarsList());
             for (Resource exemplarResource : exemplarResources)
                 resource.addProperty(exemplarProperty, exemplarResource);
+
+            resources.add(resource);
+        }
+
+        return resources;
+    }
+
+    private List<Resource> convertHistogramDataPoints(List<HistogramDataPoint> histogramDataPoints) {
+
+        List<Resource> resources = new ArrayList<>();
+
+        Property histogramDataPointProperty = model.createProperty(ontoUri, "HistogramDataPoint");
+        Property countProperty = model.createProperty(ontoUri, "count");
+        Property sumProperty = model.createProperty(ontoUri, "sum");
+        Property bucketCountProperty = model.createProperty(ontoUri, "bucketCount");
+        Property explicitBoundProperty = model.createProperty(ontoUri, "explicitBound");
+        Property exemplarProperty = model.createProperty(ontoUri, "exemplar");
+        Property minProperty = model.createProperty(ontoUri, "min");
+        Property maxProperty = model.createProperty(ontoUri, "max");
+
+        for (HistogramDataPoint histogramDataPoint : histogramDataPoints) {
+
+            Resource resource = model.createResource(ontoUri + "histogramDataPoint" + UUID.randomUUID());
+            resource.addProperty(RDF.type, histogramDataPointProperty);
+
+            resource.addLiteral(countProperty, histogramDataPoint.getCount());
+            resource.addLiteral(sumProperty, histogramDataPoint.getSum());
+
+            for (long bucketCount : histogramDataPoint.getBucketCountsList())
+                resource.addLiteral(bucketCountProperty, bucketCount);
+
+            for (double explicitBound : histogramDataPoint.getExplicitBoundsList())
+                resource.addLiteral(explicitBoundProperty, explicitBound);
+
+            List<Resource> exemplarResources = convertExemplars(histogramDataPoint.getExemplarsList());
+            for (Resource exemplarResource : exemplarResources)
+                resource.addProperty(exemplarProperty, exemplarResource);
+
+            if (histogramDataPoint.hasMin())
+                resource.addLiteral(minProperty, histogramDataPoint.getMin());
+
+            if (histogramDataPoint.hasMax())
+                resource.addLiteral(maxProperty, histogramDataPoint.getMax());
 
             resources.add(resource);
         }
