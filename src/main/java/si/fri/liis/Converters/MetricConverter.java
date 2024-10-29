@@ -134,7 +134,7 @@ public class MetricConverter extends Converter<MetricsData> {
         Property dataPointProperty = model.createProperty(ontoUri, "dataPoint");
         Property aggregationTemporalityProperty = model.createProperty(ontoUri, "aggregationTemporality");
 
-        List<Resource> dataPoints = new ArrayList<>();
+        List<Resource> dataPoints;
         Resource aggregationTemporalityResource = null;
 
         if (metric.hasGauge()) {
@@ -157,6 +157,7 @@ public class MetricConverter extends Converter<MetricsData> {
         } else if (metric.hasExponentialHistogram()) {
             typeProperty = model.createProperty(ontoUri, "ExponentialHistogram");
             aggregationTemporalityResource = convertAggregationTemporality(metric.getExponentialHistogram().getAggregationTemporality());
+            dataPoints = convertExponentialHistogramDataPoint(metric.getExponentialHistogram().getDataPointsList());
 
         } else if (metric.hasSummary()) {
             typeProperty = model.createProperty(ontoUri, "Summary");
@@ -254,6 +255,8 @@ public class MetricConverter extends Converter<MetricsData> {
             Resource resource = model.createResource(ontoUri + "histogramDataPoint" + UUID.randomUUID());
             resource.addProperty(RDF.type, histogramDataPointProperty);
 
+            dataPointsCommonsConverter(resource, histogramDataPoint.getAttributesList(), histogramDataPoint.getFlags(), histogramDataPoint.getStartTimeUnixNano(), histogramDataPoint.getTimeUnixNano());
+
             resource.addLiteral(countProperty, histogramDataPoint.getCount());
             resource.addLiteral(sumProperty, histogramDataPoint.getSum());
 
@@ -277,6 +280,75 @@ public class MetricConverter extends Converter<MetricsData> {
         }
 
         return resources;
+    }
+
+    private List<Resource> convertExponentialHistogramDataPoint(List<ExponentialHistogramDataPoint> exponentialHistogramDataPoints) {
+
+        List<Resource> resources = new ArrayList<>();
+
+        Property exponentialHistogramDataPointProperty = model.createProperty(ontoUri, "ExponentialHistogramDataPoint");
+        Property countProperty = model.createProperty(ontoUri, "count");
+        Property sumProperty = model.createProperty(ontoUri, "sum");
+        Property scaleProperty = model.createProperty(ontoUri, "scale");
+        Property zeroCountProperty = model.createProperty(ontoUri, "zeroCount");
+        Property positiveProperty = model.createProperty(ontoUri, "positive");
+        Property negativeProperty = model.createProperty(ontoUri, "negative");
+        Property exemplarProperty = model.createProperty(ontoUri, "exemplar");
+        Property minProperty = model.createProperty(ontoUri, "min");
+        Property maxProperty = model.createProperty(ontoUri, "max");
+        Property zeroThresholdProperty = model.createProperty(ontoUri, "zeroThreshold");
+
+
+        for(ExponentialHistogramDataPoint exponentialHistogramDataPoint : exponentialHistogramDataPoints) {
+
+            Resource resource = model.createResource(ontoUri + "exponentialHistogramDataPoint" + UUID.randomUUID());
+            resource.addProperty(RDF.type, exponentialHistogramDataPointProperty);
+
+            dataPointsCommonsConverter(resource, exponentialHistogramDataPoint.getAttributesList(), exponentialHistogramDataPoint.getFlags(), exponentialHistogramDataPoint.getStartTimeUnixNano(), exponentialHistogramDataPoint.getTimeUnixNano());
+
+            resource.addLiteral(countProperty, exponentialHistogramDataPoint.getCount());
+
+            if(exponentialHistogramDataPoint.hasSum())
+                resource.addLiteral(sumProperty, exponentialHistogramDataPoint.getSum());
+
+            resource.addLiteral(scaleProperty, exponentialHistogramDataPoint.getScale());
+            resource.addLiteral(zeroCountProperty, exponentialHistogramDataPoint.getZeroCount());
+
+            Resource positiveBuckets = convertBuckets(exponentialHistogramDataPoint.getPositive());
+            resource.addProperty(positiveProperty, positiveBuckets);
+
+            Resource negativeBuckets = convertBuckets(exponentialHistogramDataPoint.getNegative());
+            resource.addProperty(negativeProperty, negativeBuckets);
+
+            List<Resource> exemplarResources = convertExemplars(exponentialHistogramDataPoint.getExemplarsList());
+            for (Resource exemplarResource : exemplarResources)
+                resource.addProperty(exemplarProperty, exemplarResource);
+
+            resource.addLiteral(minProperty, exponentialHistogramDataPoint.getMin());
+            resource.addLiteral(maxProperty, exponentialHistogramDataPoint.getMax());
+            resource.addLiteral(zeroThresholdProperty, exponentialHistogramDataPoint.getZeroThreshold());
+
+            resources.add(resource);
+        }
+
+        return resources;
+    }
+
+    private Resource convertBuckets(ExponentialHistogramDataPoint.Buckets buckets) {
+
+        Resource resource = model.createResource(ontoUri + "buckets" + UUID.randomUUID());
+
+        Property bucketsProperty = model.createProperty(ontoUri, "Buckets");
+        Property offsetProperty = model.createProperty(ontoUri, "offset");
+        Property bucketCountProperty = model.createProperty(ontoUri, "bucketCount");
+
+        resource.addProperty(RDF.type, bucketsProperty);
+        resource.addLiteral(offsetProperty, buckets.getOffset());
+
+        for (long bucketCount : buckets.getBucketCountsList())
+            resource.addLiteral(bucketCountProperty, bucketCount);
+
+        return resource;
     }
 
     private List<Resource> convertSummaryDataPoints(List<SummaryDataPoint> summaryDataPoints) {
