@@ -11,6 +11,7 @@ import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
 
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 
@@ -130,8 +131,8 @@ public class MetricConverter extends Converter<MetricsData> {
         Resource resource = model.createResource(ontoUri + "metricData" + UUID.randomUUID());
 
         Property typeProperty;
-        Property dataPointProperty  = model.createProperty(ontoUri, "dataPoint");
-        Property aggregationTemporalityProperty  = model.createProperty(ontoUri, "aggregationTemporality");
+        Property dataPointProperty = model.createProperty(ontoUri, "dataPoint");
+        Property aggregationTemporalityProperty = model.createProperty(ontoUri, "aggregationTemporality");
 
         List<Resource> dataPoints = new ArrayList<>();
         Resource aggregationTemporalityResource = null;
@@ -166,10 +167,10 @@ public class MetricConverter extends Converter<MetricsData> {
 
         resource.addProperty(RDF.type, typeProperty);
 
-        for(Resource dp : dataPoints)
+        for (Resource dp : dataPoints)
             resource.addProperty(dataPointProperty, dp);
 
-        if(aggregationTemporalityResource != null)
+        if (aggregationTemporalityResource != null)
             resource.addProperty(aggregationTemporalityProperty, aggregationTemporalityResource);
 
         return resource;
@@ -178,9 +179,11 @@ public class MetricConverter extends Converter<MetricsData> {
     private Resource convertAggregationTemporality(AggregationTemporality aggregationTemporality) {
 
         return switch (aggregationTemporality) {
-            case AGGREGATION_TEMPORALITY_UNSPECIFIED -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_UNSPECIFIED");
+            case AGGREGATION_TEMPORALITY_UNSPECIFIED ->
+                    model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_UNSPECIFIED");
             case AGGREGATION_TEMPORALITY_DELTA -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_DELTA");
-            case AGGREGATION_TEMPORALITY_CUMULATIVE -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_CUMULATIVE");
+            case AGGREGATION_TEMPORALITY_CUMULATIVE ->
+                    model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_CUMULATIVE");
             default -> null;
         };
     }
@@ -192,7 +195,7 @@ public class MetricConverter extends Converter<MetricsData> {
         Property startTimeUnixNanoProperty = model.createProperty(ontoUri, "startTimeUnixNano");
         Property timeUnixNanoProperty = model.createProperty(ontoUri, "timeUnixNano");
 
-        for(KeyValue attribute : attributes) {
+        for (KeyValue attribute : attributes) {
             Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
             dataPointResource.addProperty(attributeProperty, attributeResource);
         }
@@ -210,19 +213,65 @@ public class MetricConverter extends Converter<MetricsData> {
         Property numberDataPointValueProperty = model.createProperty(ontoUri, "numberDataPointValue");
         Property exemplarProperty = model.createProperty(ontoUri, "exemplar");
 
-        for(NumberDataPoint dp : numberDataPoints) {
+        for (NumberDataPoint dp : numberDataPoints) {
 
             Resource resource = model.createResource(ontoUri + "numberDataPoint" + UUID.randomUUID());
             resource.addProperty(RDF.type, numberDataPointProperty);
 
             dataPointsCommonsConverter(resource, dp.getAttributesList(), dp.getFlags(), dp.getStartTimeUnixNano(), dp.getTimeUnixNano());
 
-            if(dp.hasAsInt())
+            if (dp.hasAsInt())
                 resource.addLiteral(numberDataPointValueProperty, dp.getAsInt());
 
-            if(dp.hasAsDouble())
+            if (dp.hasAsDouble())
                 resource.addLiteral(numberDataPointValueProperty, dp.getAsDouble());
 
+            List<Resource> exemplarResources = convertExemplars(dp.getExemplarsList());
+            for (Resource exemplarResource : exemplarResources)
+                resource.addProperty(exemplarProperty, exemplarResource);
+
+            resources.add(resource);
+        }
+
+        return resources;
+    }
+
+    private List<Resource> convertExemplars(List<Exemplar> exemplars) {
+
+        List<Resource> resources = new ArrayList<>();
+
+        Property exemplarProperty = model.createProperty(ontoUri, "Exemplar");
+        Property filteredAttributeProperty = model.createProperty(ontoUri, "filteredAttribute");
+        Property timeUnixNanoProperty = model.createProperty(ontoUri, "timeUnixNano");
+        Property numberDataPointValueProperty = model.createProperty(ontoUri, "numberDataPointValue");
+        Property spanIdProperty = model.createProperty(ontoUri, "spanId");
+        Property traceIdProperty = model.createProperty(ontoUri, "traceId");
+
+        for (Exemplar exemplar : exemplars) {
+
+            Resource resource = model.createResource(ontoUri + "exemplar" + UUID.randomUUID());
+            resource.addProperty(RDF.type, exemplarProperty);
+
+            for (KeyValue fa : exemplar.getFilteredAttributesList()) {
+                Resource attributeResource = (new KeyValueConverter(model, fa)).getConvertedResource();
+                resource.addProperty(filteredAttributeProperty, attributeResource);
+            }
+
+            resource.addLiteral(timeUnixNanoProperty, exemplar.getTimeUnixNano());
+
+            if (exemplar.hasAsInt())
+                resource.addLiteral(numberDataPointValueProperty, exemplar.getAsInt());
+
+            if (exemplar.hasAsDouble())
+                resource.addLiteral(numberDataPointValueProperty, exemplar.getAsDouble());
+
+            if (!exemplar.getSpanId().isEmpty() && !exemplar.getTraceId().isEmpty()) {
+                String tracedId = HexFormat.of().formatHex(exemplar.getTraceId().toByteArray());
+                String spanId = HexFormat.of().formatHex(exemplar.getSpanId().toByteArray());
+
+                resource.addLiteral(spanIdProperty, spanId);
+                resource.addLiteral(traceIdProperty, tracedId);
+            }
 
             resources.add(resource);
         }
