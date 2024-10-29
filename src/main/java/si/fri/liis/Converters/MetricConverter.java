@@ -159,6 +159,7 @@ public class MetricConverter extends Converter<MetricsData> {
 
         } else if (metric.hasSummary()) {
             typeProperty = model.createProperty(ontoUri, "Summary");
+            dataPoints = convertSummaryDataPoints(metric.getSummary().getDataPointsList());
 
         } else {
             typeProperty = model.createProperty(ontoUri, "MetricData");
@@ -179,11 +180,9 @@ public class MetricConverter extends Converter<MetricsData> {
     private Resource convertAggregationTemporality(AggregationTemporality aggregationTemporality) {
 
         return switch (aggregationTemporality) {
-            case AGGREGATION_TEMPORALITY_UNSPECIFIED ->
-                    model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_UNSPECIFIED");
+            case AGGREGATION_TEMPORALITY_UNSPECIFIED -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_UNSPECIFIED");
             case AGGREGATION_TEMPORALITY_DELTA -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_DELTA");
-            case AGGREGATION_TEMPORALITY_CUMULATIVE ->
-                    model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_CUMULATIVE");
+            case AGGREGATION_TEMPORALITY_CUMULATIVE -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_CUMULATIVE");
             default -> null;
         };
     }
@@ -213,24 +212,62 @@ public class MetricConverter extends Converter<MetricsData> {
         Property numberDataPointValueProperty = model.createProperty(ontoUri, "numberDataPointValue");
         Property exemplarProperty = model.createProperty(ontoUri, "exemplar");
 
-        for (NumberDataPoint dp : numberDataPoints) {
+        for (NumberDataPoint numberDataPoint : numberDataPoints) {
 
             Resource resource = model.createResource(ontoUri + "numberDataPoint" + UUID.randomUUID());
             resource.addProperty(RDF.type, numberDataPointProperty);
 
-            dataPointsCommonsConverter(resource, dp.getAttributesList(), dp.getFlags(), dp.getStartTimeUnixNano(), dp.getTimeUnixNano());
+            dataPointsCommonsConverter(resource, numberDataPoint.getAttributesList(), numberDataPoint.getFlags(), numberDataPoint.getStartTimeUnixNano(), numberDataPoint.getTimeUnixNano());
 
-            if (dp.hasAsInt())
-                resource.addLiteral(numberDataPointValueProperty, dp.getAsInt());
+            if (numberDataPoint.hasAsInt())
+                resource.addLiteral(numberDataPointValueProperty, numberDataPoint.getAsInt());
 
-            if (dp.hasAsDouble())
-                resource.addLiteral(numberDataPointValueProperty, dp.getAsDouble());
+            if (numberDataPoint.hasAsDouble())
+                resource.addLiteral(numberDataPointValueProperty, numberDataPoint.getAsDouble());
 
-            List<Resource> exemplarResources = convertExemplars(dp.getExemplarsList());
+            List<Resource> exemplarResources = convertExemplars(numberDataPoint.getExemplarsList());
             for (Resource exemplarResource : exemplarResources)
                 resource.addProperty(exemplarProperty, exemplarResource);
 
             resources.add(resource);
+        }
+
+        return resources;
+    }
+
+    private List<Resource> convertSummaryDataPoints(List<SummaryDataPoint> summaryDataPoints) {
+
+        List<Resource> resources = new ArrayList<>();
+
+        Property summaryDataPointProperty = model.createProperty(ontoUri, "SummaryDataPoint");
+        Property countProperty = model.createProperty(ontoUri, "count");
+        Property sumProperty = model.createProperty(ontoUri, "sum");
+        Property quantileValueProperty = model.createProperty(ontoUri, "quantileValue");
+
+        Property valueAtQuantileProperty = model.createProperty(ontoUri, "ValueAtQuantile");
+        Property quantileProperty = model.createProperty(ontoUri, "quantile");
+        Property valueAtQuantileValueProperty = model.createProperty(ontoUri, "valueAtQuantileValue");
+
+        for(SummaryDataPoint summaryDataPoint : summaryDataPoints) {
+
+            Resource resource = model.createResource(ontoUri + "summaryDataPoint" + UUID.randomUUID());
+            resource.addProperty(RDF.type, summaryDataPointProperty);
+
+            dataPointsCommonsConverter(resource, summaryDataPoint.getAttributesList(), summaryDataPoint.getFlags(), summaryDataPoint.getStartTimeUnixNano(), summaryDataPoint.getTimeUnixNano());
+
+            resource.addLiteral(sumProperty, summaryDataPoint.getSum());
+            resource.addLiteral(countProperty, summaryDataPoint.getCount());
+
+            for(SummaryDataPoint.ValueAtQuantile vaq : summaryDataPoint.getQuantileValuesList()) {
+
+                Resource quantileResource = model.createResource(ontoUri + "valueAtQuantile" + UUID.randomUUID());
+                quantileResource.addProperty(RDF.type, valueAtQuantileProperty);
+                quantileResource.addLiteral(quantileProperty, vaq.getQuantile());
+                quantileResource.addLiteral(valueAtQuantileValueProperty, vaq.getValue());
+
+                resource.addProperty(quantileValueProperty, quantileResource);
+            }
+
         }
 
         return resources;
