@@ -138,12 +138,15 @@ public class MetricConverter extends Converter<MetricsData> {
 
         if (metric.hasGauge()) {
             typeProperty = model.createProperty(ontoUri, "Gauge");
+            dataPoints = convertNumberDataPoints(metric.getGauge().getDataPointsList());
 
         } else if (metric.hasSum()) {
             typeProperty = model.createProperty(ontoUri, "Sum");
+            aggregationTemporalityResource = convertAggregationTemporality(metric.getSum().getAggregationTemporality());
+            dataPoints = convertNumberDataPoints(metric.getSum().getDataPointsList());
+
             Property isMonotonicProperty = model.createProperty(ontoUri, "isMonotonic");
             resource.addLiteral(isMonotonicProperty, metric.getSum().getIsMonotonic());
-            aggregationTemporalityResource = convertAggregationTemporality(metric.getSum().getAggregationTemporality());
 
         } else if (metric.hasHistogram()) {
             typeProperty = model.createProperty(ontoUri, "Histogram");
@@ -175,11 +178,56 @@ public class MetricConverter extends Converter<MetricsData> {
     private Resource convertAggregationTemporality(AggregationTemporality aggregationTemporality) {
 
         return switch (aggregationTemporality) {
-            case AGGREGATION_TEMPORALITY_UNSPECIFIED -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_UNSPECIFIED");
-            case AGGREGATION_TEMPORALITY_DELTA -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_DELTA");
-            case AGGREGATION_TEMPORALITY_CUMULATIVE -> model.createResource(ontoUri + ":AGGREGATION_TEMPORALITY_CUMULATIVE");
+            case AGGREGATION_TEMPORALITY_UNSPECIFIED -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_UNSPECIFIED");
+            case AGGREGATION_TEMPORALITY_DELTA -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_DELTA");
+            case AGGREGATION_TEMPORALITY_CUMULATIVE -> model.createResource(ontoUri + "AGGREGATION_TEMPORALITY_CUMULATIVE");
             default -> null;
         };
+    }
+
+    private void dataPointsCommonsConverter(Resource dataPointResource, List<KeyValue> attributes, int flags, long startTimeUnixNano, long timeUnixNano) {
+
+        Property attributeProperty = model.createProperty(ontoUri, "attribute");
+        Property flagsProperty = model.createProperty(ontoUri, "flags");
+        Property startTimeUnixNanoProperty = model.createProperty(ontoUri, "startTimeUnixNano");
+        Property timeUnixNanoProperty = model.createProperty(ontoUri, "timeUnixNano");
+
+        for(KeyValue attribute : attributes) {
+            Resource attributeResource = (new KeyValueConverter(model, attribute)).getConvertedResource();
+            dataPointResource.addProperty(attributeProperty, attributeResource);
+        }
+
+        dataPointResource.addLiteral(flagsProperty, flags);
+        dataPointResource.addLiteral(startTimeUnixNanoProperty, startTimeUnixNano);
+        dataPointResource.addLiteral(timeUnixNanoProperty, timeUnixNano);
+    }
+
+    private List<Resource> convertNumberDataPoints(List<NumberDataPoint> numberDataPoints) {
+
+        List<Resource> resources = new ArrayList<>();
+
+        Property numberDataPointProperty = model.createProperty(ontoUri, "NumberDataPoint");
+        Property numberDataPointValueProperty = model.createProperty(ontoUri, "numberDataPointValue");
+        Property exemplarProperty = model.createProperty(ontoUri, "exemplar");
+
+        for(NumberDataPoint dp : numberDataPoints) {
+
+            Resource resource = model.createResource(ontoUri + "numberDataPoint" + UUID.randomUUID());
+            resource.addProperty(RDF.type, numberDataPointProperty);
+
+            dataPointsCommonsConverter(resource, dp.getAttributesList(), dp.getFlags(), dp.getStartTimeUnixNano(), dp.getTimeUnixNano());
+
+            if(dp.hasAsInt())
+                resource.addLiteral(numberDataPointValueProperty, dp.getAsInt());
+
+            if(dp.hasAsDouble())
+                resource.addLiteral(numberDataPointValueProperty, dp.getAsDouble());
+
+
+            resources.add(resource);
+        }
+
+        return resources;
     }
 
 }
