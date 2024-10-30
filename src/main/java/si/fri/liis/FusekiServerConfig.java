@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import si.fri.liis.Helpers.QueryHelpers;
@@ -36,23 +35,23 @@ public class FusekiServerConfig {
     }
 
     @Bean
-    public CommandLineRunner runFusekiServer() {
-        return args -> {
+    public FusekiServer runFusekiServer() {
 
-            FusekiServer server = FusekiServer
-                    .create()
-                    .port(3030)
-                    .parseConfigFile("src/main/resources/fuseki.config.ttl")
-                    .build();
+        FusekiServer server = FusekiServer
+                .create()
+                .port(3030)
+                .parseConfigFile("src/main/resources/fuseki.config.ttl")
+                .build();
 
-            logger.info("Starting Fuseki server...");
-            server.start();
+        logger.info("Starting Fuseki server...");
+        server.start();
 
-            if (ontologyLoaded())
-                logger.info("Ontology already loaded...");
-            else
-                loadOntology();
-        };
+        if (ontologyLoaded())
+            logger.info("Ontology already loaded...");
+        else
+            loadOntology();
+
+        return server;
     }
 
     private boolean ontologyLoaded() {
