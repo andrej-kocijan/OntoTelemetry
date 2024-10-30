@@ -71,7 +71,7 @@
     (?s rdf:type :Span)
     (?t rdf:type :Trace)
     (?s :traceId ?id)
-    (?s :traceId ?id)
+    (?t :traceId ?id)
     ->
     (?t :containsSpan ?s)
 ]
