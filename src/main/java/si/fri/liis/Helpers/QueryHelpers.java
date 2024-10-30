@@ -6,7 +6,7 @@ import org.apache.jena.shared.PrefixMapping;
 
 public class QueryHelpers {
 
-    private final static String ONTOLOGY_URL = "http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology";
+    private final static String ONTOLOGY_URL = "http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology#";
 
     public static PrefixMapping getPrefixes() {
 
