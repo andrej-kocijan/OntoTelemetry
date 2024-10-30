@@ -8,11 +8,10 @@ PREFIX ja:      <http://jena.hpl.hp.com/2005/11/Assembler#>
 PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 
 [] rdf:type fuseki:Server ;
-   fuseki:services ( :service ) .
+   fuseki:services ( :service :serviceRaw  ) .
 
-## Service description for "/dataset"
-## with a TDB2 dataset
 
+## Serves reasoned data
 :service rdf:type fuseki:Service ;
     fuseki:name "ds" ;
     fuseki:endpoint [
@@ -25,27 +24,41 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
         fuseki:operation fuseki:query ;
         fuseki:name "query"
     ] ;
-    fuseki:endpoint [
-        fuseki:operation fuseki:update ;
-        fuseki:name "update"
-    ] ;
-    fuseki:endpoint [
-        fuseki:operation fuseki:gsp-r ;
-        fuseki:name "get"
-    ] ;
-    fuseki:endpoint [
-        fuseki:operation fuseki:gsp-rw ;
-        fuseki:name "data"
-    ] ;
-    fuseki:endpoint [
-        fuseki:operation fuseki:patch ;
-        fuseki:name "patch"
-    ] ;
-    fuseki:endpoint [
-        fuseki:operation fuseki:upload ;
-        fuseki:name "load"
-    ] ;
     fuseki:dataset :dataset_main ;
+    .
+
+## Serves raw data for fast lookups and inserts
+:serviceRaw rdf:type fuseki:Service ;
+    fuseki:name "raw" ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:query ;
+              fuseki:name "sparql" ;
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:query ;
+              fuseki:name "query"
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:update ;
+              fuseki:name "update"
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:gsp-r ;
+              fuseki:name "get"
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:gsp-rw ;
+              fuseki:name "data"
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:patch ;
+              fuseki:name "patch"
+          ] ;
+    fuseki:endpoint [
+              fuseki:operation fuseki:upload ;
+              fuseki:name "load"
+          ] ;
+    fuseki:dataset :dataset_tdb2 ;
     .
 
 ## Set inferred model as the main dataset
