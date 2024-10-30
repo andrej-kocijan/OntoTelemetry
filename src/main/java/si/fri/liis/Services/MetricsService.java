@@ -3,6 +3,7 @@ package si.fri.liis.Services;
 import io.opentelemetry.proto.metrics.v1.MetricsData;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
+import org.apache.jena.system.Txn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,15 +25,20 @@ public class MetricsService {
 
     public void HandleMetric(MetricsData metricsData) {
 
-        Model m;
+        Model model;
 
-        try(RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()){
+        try (RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()) {
             MetricConverter mc = new MetricConverter(metricsData, conn);
-            mc.getConvertedModel().write(System.out, "TURTLE");
-            System.out.println("------------------------------------------------------");
-        }catch (Exception e){
+            model = mc.getConvertedModel();
+        } catch (Exception e) {
             logger.error(e.getMessage());
+            return;
         }
 
+        try (RDFConnectionFuseki conn = connFusekiFactory.createLoadConnection()) {
+            Txn.executeWrite(conn, () -> conn.load(model));
+        } catch (Exception e) {
+            logger.error(e.getMessage());
+        }
     }
 }
