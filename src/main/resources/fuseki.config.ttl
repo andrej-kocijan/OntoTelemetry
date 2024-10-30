@@ -16,13 +16,11 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
     fuseki:name "ds" ;
     fuseki:endpoint [
         fuseki:operation fuseki:query ;
-        fuseki:name "sparql" ;
-        ## Set default-union-graph for this endpoint.
-        ## ja:context [ ja:cxtName "tdb:unionDefaultGraph" ; ja:cxtValue true ] ;
+        fuseki:name "query"
     ] ;
     fuseki:endpoint [
-        fuseki:operation fuseki:query ;
-        fuseki:name "query"
+        fuseki:operation fuseki:gsp-r ;
+        fuseki:name "get"
     ] ;
     fuseki:dataset :dataset_main ;
     .
@@ -30,10 +28,6 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 ## Serves raw data for fast lookups and inserts
 :serviceRaw rdf:type fuseki:Service ;
     fuseki:name "raw" ;
-    fuseki:endpoint [
-              fuseki:operation fuseki:query ;
-              fuseki:name "sparql" ;
-          ] ;
     fuseki:endpoint [
               fuseki:operation fuseki:query ;
               fuseki:name "query"
