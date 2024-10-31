@@ -68,7 +68,7 @@ public class QueryHelpers {
 
             String toBeRemoved = resources.get(i).getLocalName();
 
-            String q2 = QueryHelpers.createUpdate(String.format("""
+            String q2 = createUpdate(String.format("""
                     DELETE { ?s ?p :%s }
                     INSERT { ?s ?p :%s }
                     WHERE {
@@ -77,7 +77,7 @@ public class QueryHelpers {
                     }
                     """, toBeRemoved, mainResource, toBeRemoved, mainResource));
 
-            String q3 = QueryHelpers.createUpdate(String.format("""
+            String q3 = createUpdate(String.format("""
                     DELETE WHERE { :%s ?p ?o }
                     """, toBeRemoved));
 

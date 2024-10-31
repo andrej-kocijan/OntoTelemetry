@@ -1,6 +1,7 @@
 package si.fri.liis.Helpers;
 
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
+import org.apache.jena.sparql.exec.http.UpdateSendMode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -34,9 +35,9 @@ public class RDFConnectionFusekiFactory {
     public RDFConnectionFuseki createGeneralConnection() {
         return (RDFConnectionFuseki) RDFConnectionFuseki
                 .create()
+                .updateSendMode(UpdateSendMode.asPostForm)
                 .updateEndpoint(fusekiUrl + "/update")
                 .queryEndpoint(fusekiUrl + "/query")
-                .updateEndpoint(fusekiUrl + "/update")
                 .build();
     }
 }
