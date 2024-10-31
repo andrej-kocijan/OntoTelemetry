@@ -14,6 +14,7 @@
     (?r2 rdf:type :Resource)
     (?r1 :serviceName ?n)
     (?r2 :serviceName ?n)
+    notEqual(?n, "")
     ->
     (?r1 owl:sameAs ?r2)
 ]

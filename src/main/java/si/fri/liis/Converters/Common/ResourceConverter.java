@@ -28,7 +28,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                 .filter(a -> a.getKey().equals("service.name") && a.getValue().hasStringValue())
                 .map(a -> a.getValue().getStringValue())
                 .findFirst()
-                .orElse( "noServiceName");
+                .orElse( "");
 
         Resource existing = checkForExisting(serviceName);
 
@@ -61,7 +61,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
 
     private Resource checkForExisting(String serviceName) {
 
-        if(serviceName.equals("noServiceName"))
+        if(serviceName.isEmpty())
             return null;
 
         AtomicReference<Resource> resource = new AtomicReference<>(null);
