@@ -78,7 +78,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                 """, serviceName));
 
         try {
-            Txn.executeRead(conn, () -> {
+            Txn.executeWrite(conn, () -> {
 
                 List<Resource> resources = new ArrayList<>();
 
@@ -86,8 +86,6 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                     Resource r = result.getResource("resource");
                     resources.add(r);
                 });
-
-                System.out.println("Found " + resources.size() + " resources");
 
                 if(!resources.isEmpty())
                     atomicResource.set(resources.get(0));
@@ -98,7 +96,6 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                     for(int i = 1; i < resources.size(); i++){
 
                         String toBeRemoved = resources.get(i).getLocalName();
-
 
                         String q2 = QueryHelpers.createUpdate(String.format("""
                                 DELETE { ?s ?p :%s }
@@ -112,9 +109,6 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                         String q3 = QueryHelpers.createUpdate(String.format("""
                                 DELETE WHERE { :%s ?p ?o }
                                 """, toBeRemoved));
-
-                        System.out.println(q2);
-                        System.out.println(q3);
 
                         conn.update(q2);
                         conn.update(q3);

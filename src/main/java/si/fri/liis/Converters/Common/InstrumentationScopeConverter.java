@@ -11,6 +11,8 @@ import org.apache.jena.system.Txn;
 import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Helpers.QueryHelpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -61,14 +63,47 @@ public class InstrumentationScopeConverter extends CommonConverter<Instrumentati
                         :name "%s" ;
                         :version "%s" .
                 }
-                LIMIT 1
                 """, name, version));
 
         try {
-            Txn.executeRead(conn, () -> conn.querySelect(q, (result) -> {
-                Resource r = result.getResource("scope");
-                resource.set(r);
-            }));
+            Txn.executeWrite(conn, () -> {
+
+                List<Resource> resources = new ArrayList<>();
+
+                conn.querySelect(q, (result) -> {
+                    Resource r = result.getResource("scope");
+                    resources.add(r);
+                });
+
+                if(!resources.isEmpty())
+                    resource.set(resources.get(0));
+
+                // Due to high concurrency, multiple resources could be created, merge them
+                if(resources.size() > 1) {
+                    String mainResource = resources.get(0).getLocalName();
+                    for(int i = 1; i < resources.size(); i++){
+
+                        String toBeRemoved = resources.get(i).getLocalName();
+
+                        String q2 = QueryHelpers.createUpdate(String.format("""
+                                DELETE { ?s ?p :%s }
+                                INSERT { ?s ?p :%s }
+                                WHERE {
+                                    ?s ?p :%s .
+                                    FILTER (?s != :%s)
+                                }
+                                """, toBeRemoved, mainResource, toBeRemoved, mainResource));
+
+                        String q3 = QueryHelpers.createUpdate(String.format("""
+                                DELETE WHERE { :%s ?p ?o }
+                                """, toBeRemoved));
+
+                        conn.update(q2);
+                        conn.update(q3);
+                    }
+                }
+
+            });
         } catch (Exception e) {
             System.err.println("Error while querying for existing scope: " + e.getMessage());
         }
