@@ -91,29 +91,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                     atomicResource.set(resources.get(0));
 
                 // Due to high concurrency, multiple resources could be created, merge them
-                if(resources.size() > 1) {
-                    String mainResource = resources.get(0).getLocalName();
-                    for(int i = 1; i < resources.size(); i++){
-
-                        String toBeRemoved = resources.get(i).getLocalName();
-
-                        String q2 = QueryHelpers.createUpdate(String.format("""
-                                DELETE { ?s ?p :%s }
-                                INSERT { ?s ?p :%s }
-                                WHERE {
-                                    ?s ?p :%s .
-                                    FILTER (?s != :%s)
-                                }
-                                """, toBeRemoved, mainResource, toBeRemoved, mainResource));
-
-                        String q3 = QueryHelpers.createUpdate(String.format("""
-                                DELETE WHERE { :%s ?p ?o }
-                                """, toBeRemoved));
-
-                        conn.update(q2);
-                        conn.update(q3);
-                    }
-                }
+                QueryHelpers.mergeDuplicates(resources, conn);
 
             });
         } catch (Exception e) {
