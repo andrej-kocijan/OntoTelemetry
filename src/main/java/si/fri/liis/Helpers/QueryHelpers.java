@@ -35,4 +35,22 @@ public class QueryHelpers {
 
         return QueryFactory.create(sb.toString());
     }
+
+    public static String createUpdate(String query) {
+
+        StringBuilder sb = new StringBuilder();
+        PrefixMapping prefixes = getPrefixes();
+
+        for(String prefix: prefixes.getNsPrefixMap().keySet()) {
+            sb.append("PREFIX ");
+            sb.append(prefix);
+            sb.append(": <");
+            sb.append(prefixes.getNsPrefixURI(prefix));
+            sb.append(">\n");
+        }
+
+        sb.append(query);
+
+        return sb.toString();
+    }
 }

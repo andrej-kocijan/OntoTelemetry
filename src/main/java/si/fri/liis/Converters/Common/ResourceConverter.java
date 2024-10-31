@@ -10,6 +10,8 @@ import org.apache.jena.system.Txn;
 import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Helpers.QueryHelpers;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -64,7 +66,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
         if(serviceName.isEmpty())
             return null;
 
-        AtomicReference<Resource> resource = new AtomicReference<>(null);
+        AtomicReference<Resource> atomicResource = new AtomicReference<>(null);
 
         Query q = QueryHelpers.createQuery(String.format("""
                 SELECT ?resource
@@ -72,18 +74,58 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                     ?resource a :Resource ;
                         :serviceName "%s" .
                 }
-                LIMIT 1
+                ORDER BY ?resource
                 """, serviceName));
 
         try {
-            Txn.executeRead(conn, () -> conn.querySelect(q, (result) -> {
-                Resource r = result.getResource("resource");
-                resource.set(r);
-            }));
+            Txn.executeRead(conn, () -> {
+
+                List<Resource> resources = new ArrayList<>();
+
+                conn.querySelect(q, (result) -> {
+                    Resource r = result.getResource("resource");
+                    resources.add(r);
+                });
+
+                System.out.println("Found " + resources.size() + " resources");
+
+                if(!resources.isEmpty())
+                    atomicResource.set(resources.get(0));
+
+                // Due to high concurrency, multiple resources could be created, merge them
+                if(resources.size() > 1) {
+                    String mainResource = resources.get(0).getLocalName();
+                    for(int i = 1; i < resources.size(); i++){
+
+                        String toBeRemoved = resources.get(i).getLocalName();
+
+
+                        String q2 = QueryHelpers.createUpdate(String.format("""
+                                DELETE { ?s ?p :%s }
+                                INSERT { ?s ?p :%s }
+                                WHERE {
+                                    ?s ?p :%s .
+                                    FILTER (?s != :%s)
+                                }
+                                """, toBeRemoved, mainResource, toBeRemoved, mainResource));
+
+                        String q3 = QueryHelpers.createUpdate(String.format("""
+                                DELETE WHERE { :%s ?p ?o }
+                                """, toBeRemoved));
+
+                        System.out.println(q2);
+                        System.out.println(q3);
+
+                        conn.update(q2);
+                        conn.update(q3);
+                    }
+                }
+
+            });
         } catch (Exception e) {
             System.err.println("Error while querying for existing resource: " + e.getMessage());
         }
 
-        return resource.get();
+        return atomicResource.get();
     }
 }

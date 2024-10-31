@@ -27,7 +27,7 @@ public class TracesService {
 
         Model model;
 
-        try (RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()) {
+        try (RDFConnectionFuseki conn = connFusekiFactory.createGeneralConnection()) {
             TraceConverter tc = new TraceConverter(tracesData, conn);
             model = tc.getConvertedModel();
         } catch (Exception e) {

@@ -27,7 +27,7 @@ public class MetricsService {
 
         Model model;
 
-        try (RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()) {
+        try (RDFConnectionFuseki conn = connFusekiFactory.createGeneralConnection()) {
             MetricConverter mc = new MetricConverter(metricsData, conn);
             model = mc.getConvertedModel();
         } catch (Exception e) {

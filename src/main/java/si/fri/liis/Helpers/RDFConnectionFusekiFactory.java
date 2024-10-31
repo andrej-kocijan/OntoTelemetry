@@ -30,4 +30,13 @@ public class RDFConnectionFusekiFactory {
                 .destination(fusekiUrl + "/load")
                 .build();
     }
+
+    public RDFConnectionFuseki createGeneralConnection() {
+        return (RDFConnectionFuseki) RDFConnectionFuseki
+                .create()
+                .updateEndpoint(fusekiUrl + "/update")
+                .queryEndpoint(fusekiUrl + "/query")
+                .updateEndpoint(fusekiUrl + "/update")
+                .build();
+    }
 }
