@@ -5,14 +5,15 @@ import io.opentelemetry.proto.common.v1.KeyValue;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.UUID;
 
 public class InstrumentationScopeConverter extends CommonConverter<InstrumentationScope>{
 
-    public InstrumentationScopeConverter(Model model, InstrumentationScope source) {
-        super(model, source);
+    public InstrumentationScopeConverter(Model model, InstrumentationScope source, RDFConnectionFuseki conn) {
+        super(model, source, conn);
     }
 
     @Override

@@ -53,7 +53,7 @@ public class MetricConverter extends Converter<MetricsData> {
             resourceMetricResource.addProperty(RDF.type, resourceMetricsProperty);
             resourceMetricResource.addProperty(schemaUrlProperty, resourceMetrics.getSchemaUrl());
 
-            Resource resourceResource = (new ResourceConverter(model, resourceMetrics.getResource())).getConvertedResource();
+            Resource resourceResource = (new ResourceConverter(model, resourceMetrics.getResource(), conn)).getConvertedResource();
             resourceMetricResource.addProperty(resourceProperty, resourceResource);
 
             List<Resource> scopeMetricsResources = convertScopeMetrics(resourceMetrics.getScopeMetricsList());
@@ -83,7 +83,7 @@ public class MetricConverter extends Converter<MetricsData> {
 
             resource.addProperty(schemaUrlProperty, sm.getSchemaUrl());
 
-            Resource instrumentationScopeResource = (new InstrumentationScopeConverter(model, sm.getScope())).getConvertedResource();
+            Resource instrumentationScopeResource = (new InstrumentationScopeConverter(model, sm.getScope(), conn)).getConvertedResource();
             resource.addProperty(scopeProperty, instrumentationScopeResource);
 
             List<Resource> spanResources = convertMetrics(sm.getMetricsList());

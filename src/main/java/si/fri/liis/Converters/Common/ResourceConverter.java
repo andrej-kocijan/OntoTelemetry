@@ -4,14 +4,15 @@ import io.opentelemetry.proto.common.v1.KeyValue;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.Property;
 import org.apache.jena.rdf.model.Resource;
+import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.UUID;
 
 public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.resource.v1.Resource> {
 
-    public ResourceConverter(Model model, io.opentelemetry.proto.resource.v1.Resource resource) {
-        super(model, resource);
+    public ResourceConverter(Model model, io.opentelemetry.proto.resource.v1.Resource resource, RDFConnectionFuseki conn) {
+        super(model, resource, conn);
     }
 
     @Override

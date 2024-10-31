@@ -52,7 +52,7 @@ public class TraceConverter extends Converter<TracesData> {
             resourceSpansResource.addProperty(RDF.type, resourceSpanProperty);
             resourceSpansResource.addProperty(schemaUrlProperty, resourceSpans.getSchemaUrl());
 
-            Resource resourceResource = (new ResourceConverter(model, resourceSpans.getResource())).getConvertedResource();
+            Resource resourceResource = (new ResourceConverter(model, resourceSpans.getResource(), conn)).getConvertedResource();
             resourceSpansResource.addProperty(resourceProperty, resourceResource);
 
 
@@ -83,7 +83,7 @@ public class TraceConverter extends Converter<TracesData> {
 
             resource.addProperty(schemaUrlProperty, ss.getSchemaUrl());
 
-            Resource instrumentationScopeResource = (new InstrumentationScopeConverter(model, ss.getScope())).getConvertedResource();
+            Resource instrumentationScopeResource = (new InstrumentationScopeConverter(model, ss.getScope(), conn)).getConvertedResource();
             resource.addProperty(scopeProperty, instrumentationScopeResource);
 
             List<Resource> spanResources = convertSpans(ss.getSpansList());

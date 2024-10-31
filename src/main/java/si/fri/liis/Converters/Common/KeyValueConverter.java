@@ -12,7 +12,7 @@ import java.util.UUID;
 public class KeyValueConverter extends CommonConverter<KeyValue> {
 
     public KeyValueConverter(Model model, KeyValue source) {
-        super(model, source);
+        super(model, source, null);
     }
 
     @Override
