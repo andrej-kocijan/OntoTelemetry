@@ -12,11 +12,14 @@ import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Helpers.QueryHelpers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class InstrumentationScopeConverter extends CommonConverter<InstrumentationScope>{
+
+    public static HashMap<String, Resource> existingResources = new HashMap<>();
 
     public InstrumentationScopeConverter(Model model, InstrumentationScope source, RDFConnectionFuseki conn) {
         super(model, source, conn);
@@ -33,6 +36,10 @@ public class InstrumentationScopeConverter extends CommonConverter<Instrumentati
        }
 
        this.resource = this.model.createResource(ontoUri + "InstrumentationScope" + UUID.randomUUID());
+
+        if(!existingResources.containsKey(source.getName() + "@" + source.getVersion()))
+            existingResources.put(source.getName() + "@" + source.getVersion(), resource);
+
        Property instrumentationScopeProperty = model.createProperty(ontoUri, "InstrumentationScope");
        resource.addProperty(RDF.type, instrumentationScopeProperty);
 
@@ -54,6 +61,9 @@ public class InstrumentationScopeConverter extends CommonConverter<Instrumentati
 
     private Resource checkForExisting(String name, String version) {
 
+        if(existingResources.containsKey(name + "@" + version))
+            return existingResources.get(name + "@" + version);
+
         AtomicReference<Resource> resource = new AtomicReference<>(null);
 
         Query q = QueryHelpers.createQuery(String.format("""
@@ -64,6 +74,7 @@ public class InstrumentationScopeConverter extends CommonConverter<Instrumentati
                         :version "%s" .
                 }
                 ORDER BY ?scope
+                LIMIT 1
                 """, name, version));
 
         try {
@@ -76,11 +87,13 @@ public class InstrumentationScopeConverter extends CommonConverter<Instrumentati
                     resources.add(r);
                 });
 
-                if(!resources.isEmpty())
+                if(!resources.isEmpty()) {
                     resource.set(resources.get(0));
+                    existingResources.put(name + "@" + version, resources.get(0));
+                }
 
                 // Due to high concurrency, multiple resources could be created, merge them
-                QueryHelpers.mergeDuplicates(resources, conn);
+//                QueryHelpers.mergeDuplicates(resources, conn);
 
             });
         } catch (Exception e) {

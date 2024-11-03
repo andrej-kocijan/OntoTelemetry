@@ -11,11 +11,14 @@ import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Helpers.QueryHelpers;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.resource.v1.Resource> {
+
+    public static HashMap<String, Resource> existingResources = new HashMap<>();
 
     public ResourceConverter(Model model, io.opentelemetry.proto.resource.v1.Resource resource, RDFConnectionFuseki conn) {
         super(model, resource, conn);
@@ -40,6 +43,9 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
         }
 
         this.resource = this.model.createResource(ontoUri + "resource" + UUID.randomUUID());
+
+        if(serviceName.isEmpty() && !existingResources.containsKey(serviceName))
+            existingResources.put(serviceName, resource);
 
         Property resourceProperty = this.model.createProperty(ontoUri, "Resource");
         Property attributeProperty = this.model.createProperty(ontoUri, "attribute");
@@ -66,6 +72,9 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
         if(serviceName.isEmpty())
             return null;
 
+        if(existingResources.containsKey(serviceName))
+            return existingResources.get(serviceName);
+
         AtomicReference<Resource> atomicResource = new AtomicReference<>(null);
 
         Query q = QueryHelpers.createQuery(String.format("""
@@ -75,6 +84,7 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                         :serviceName "%s" .
                 }
                 ORDER BY ?resource
+                LIMIT 1
                 """, serviceName));
 
         try {
@@ -87,11 +97,13 @@ public class ResourceConverter extends CommonConverter<io.opentelemetry.proto.re
                     resources.add(r);
                 });
 
-                if(!resources.isEmpty())
+                if(!resources.isEmpty()) {
                     atomicResource.set(resources.get(0));
+                    existingResources.put(serviceName, resources.get(0));
+                }
 
                 // Due to high concurrency, multiple resources could be created, merge them
-                QueryHelpers.mergeDuplicates(resources, conn);
+//                QueryHelpers.mergeDuplicates(resources, conn);
 
             });
         } catch (Exception e) {
