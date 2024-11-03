@@ -5,6 +5,9 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
+## Include OWL rules
+@include <OWLMicro> .
+
 ## The OWL reasoner in Apache Jena Fuseki lacks support for some of the rules OWL 2 offers
 ## Those rules are therefore re-implemented here
 
@@ -58,4 +61,3 @@
     ->
     (?mainSpan :linked ?span)
 ]
-

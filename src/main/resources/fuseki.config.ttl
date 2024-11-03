@@ -59,18 +59,13 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 :dataset_main rdf:type ja:RDFDataset;
     ja:defaultGraph :inf_model .
 
-## Run reasoner
-:inf_model rdf:type ja:InfModel;
-    ja:reasoner [ ja:reasonerURL <http://jena.hpl.hp.com/2003/OWLFBRuleReasoner> ];
-    ja:baseModel :inf_model1 .
-
 ## Use custom rules
-:inf_model1 rdf:type ja:InfModel;
+:inf_model rdf:type ja:InfModel;
+    ja:baseModel :base_model ;
     ja:reasoner [
-                    ja:reasonerUrl <http://jena.hpl.hp.com/2003/GenericRuleReasoner> ;
-                    ja:rulesFrom <rules.rules>
-                ] ;
-    ja:baseModel :base_model .
+        ja:reasonerURL <http://jena.hpl.hp.com/2003/GenericRuleReasoner> ;
+        ja:rulesFrom <rules.rules>
+    ] .
 
 ## "Convert" the dataset into a TDB2 graph
 :base_model rdf:type tdb2:GraphTDB2;
