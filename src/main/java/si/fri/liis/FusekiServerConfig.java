@@ -7,15 +7,14 @@ import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFLanguages;
+import org.apache.jena.sparql.exec.http.UpdateSendMode;
 import org.apache.jena.system.Txn;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 import si.fri.liis.Helpers.QueryHelpers;
-import si.fri.liis.Helpers.RDFConnectionFusekiFactory;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -27,15 +26,11 @@ public class FusekiServerConfig {
 
     private static final Logger logger = LoggerFactory.getLogger(FusekiServerConfig.class);
 
-    private final RDFConnectionFusekiFactory connFusekiFactory;
-
-    @Autowired
-    public FusekiServerConfig(RDFConnectionFusekiFactory connFusekiFactory) {
-        this.connFusekiFactory = connFusekiFactory;
-    }
+    @Value("${fuseki.server.url}")
+    private String fusekiUrl;
 
     @Bean
-    public FusekiServer runFusekiServer() {
+    public RDFConnectionFuseki runFusekiServer() {
 
         FusekiServer server = FusekiServer
                 .create()
@@ -46,17 +41,25 @@ public class FusekiServerConfig {
         logger.info("Starting Fuseki server...");
         server.start();
 
-        if (ontologyLoaded())
+        RDFConnectionFuseki conn = (RDFConnectionFuseki) RDFConnectionFuseki
+                .create()
+                .updateSendMode(UpdateSendMode.asPostForm)
+                .updateEndpoint(fusekiUrl + "/update")
+                .queryEndpoint(fusekiUrl + "/query")
+                .gspEndpoint(fusekiUrl + "/load")
+                .build();
+
+        if (ontologyLoaded(conn))
             logger.info("Ontology already loaded...");
         else
-            loadOntology();
+            loadOntology(conn);
 
-        return server;
+        return conn;
     }
 
-    private boolean ontologyLoaded() {
+    private boolean ontologyLoaded(RDFConnectionFuseki conn) {
 
-        try (RDFConnectionFuseki conn = connFusekiFactory.createQueryConnection()) {
+        try {
             Query q = QueryHelpers.createQuery("""
                     ASK { <http://www.semanticweb.org/andrej/ontologies/2024/9/opentelemetry-ontology> rdf:type owl:Ontology . }
                     """);
@@ -73,10 +76,10 @@ public class FusekiServerConfig {
         return false;
     }
 
-    private void loadOntology() {
+    private void loadOntology(RDFConnectionFuseki conn) {
 
         logger.info("Loading ontology...");
-        try (RDFConnectionFuseki conn = connFusekiFactory.createLoadConnection()) {
+        try {
 
             Model model = ModelFactory.createDefaultModel();
 
