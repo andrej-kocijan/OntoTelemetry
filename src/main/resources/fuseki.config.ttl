@@ -63,8 +63,7 @@ PREFIX tdb2:    <http://jena.apache.org/2016/tdb#>
 :inf_model rdf:type ja:InfModel;
     ja:baseModel :base_model ;
     ja:reasoner [
-        ja:reasonerURL <http://jena.hpl.hp.com/2003/GenericRuleReasoner> ;
-        ja:rulesFrom <rules.rules>
+        ja:reasonerURL <http://jena.hpl.hp.com/2003/OWLMicroFBRuleReasoner> ;
     ] .
 
 ## "Convert" the dataset into a TDB2 graph
