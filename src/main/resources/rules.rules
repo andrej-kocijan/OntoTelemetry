@@ -11,19 +11,6 @@
 ## The OWL reasoner in Apache Jena Fuseki lacks support for some of the rules OWL 2 offers
 ## Those rules are therefore re-implemented here
 
-# Infer parent spans based on spanId and parentSpanId
-# OWL reasoner will then infer the parentSpan property (inverse)
-[parentSpanRule:
-    (?s1 rdf:type :Span)
-    (?s2 rdf:type :Span)
-    (?s1 :traceId ?t)
-    (?s2 :traceId ?t)
-    (?s2 :spanId ?p)
-    (?s1 :parentSpanId ?p)
-    ->
-    (?s1 :parentSpan ?s2)
-]
-
 # Infer which spans are part of which trace, based on traceId
 # Reverse property is once again inferred by OWL reasoner
 [traceContainsSpan:

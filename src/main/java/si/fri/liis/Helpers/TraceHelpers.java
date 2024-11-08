@@ -9,7 +9,6 @@ import org.apache.jena.system.Txn;
 import org.apache.jena.vocabulary.RDF;
 
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class TraceHelpers {
@@ -33,7 +32,7 @@ public class TraceHelpers {
             Txn.executeRead(conn, () -> exists.set(conn.queryAsk(q)));
 
             if(!exists.get()) {
-                Resource resource = model.createResource(ontoUri + "trace" + traceId + UUID.randomUUID().toString().split("-")[0]);
+                Resource resource = model.createResource(ontoUri + "trace-" + traceId);
                 resource.addProperty(RDF.type, traceProperty);
                 resource.addLiteral(traceIdProperty, traceId);
             }

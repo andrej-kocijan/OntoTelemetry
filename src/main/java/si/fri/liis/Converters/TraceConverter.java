@@ -106,6 +106,7 @@ public class TraceConverter extends Converter<TracesData> {
         Property spanIdProperty = model.createProperty(ontoUri, "spanId");
         Property traceStateProperty = model.createProperty(ontoUri, "traceState");
         Property parentSpanIdProperty = model.createProperty(ontoUri, "parentSpanId");
+        Property parentSpanProperty = model.createProperty(ontoUri, "parentSpan");
         Property flagsProperty = model.createProperty(ontoUri, "flags");
         Property nameProperty = model.createProperty(ontoUri, "name");
         Property kindProperty = model.createProperty(ontoUri, "kind");
@@ -124,7 +125,7 @@ public class TraceConverter extends Converter<TracesData> {
             String tracedId = HexFormat.of().formatHex(span.getTraceId().toByteArray());
             String spanId = HexFormat.of().formatHex(span.getSpanId().toByteArray());
 
-            Resource resource = model.createResource(ontoUri + "span" + tracedId + "-" + spanId + "-" + UUID.randomUUID().toString().split("-")[0]);
+            Resource resource = model.createResource(ontoUri + "span-" + tracedId + "-" + spanId);
             resource.addProperty(RDF.type, spanProperty);
 
             resource.addLiteral(traceIdProperty, tracedId);
@@ -132,9 +133,16 @@ public class TraceConverter extends Converter<TracesData> {
 
             resource.addLiteral(spanIdProperty, spanId);
             resource.addLiteral(traceStateProperty, span.getTraceState());
-            resource.addLiteral(parentSpanIdProperty, HexFormat.of().formatHex(span.getParentSpanId().toByteArray()));
             resource.addLiteral(flagsProperty, span.getFlags());
             resource.addLiteral(nameProperty, span.getName());
+
+
+            if(!span.getParentSpanId().isEmpty()) {
+                String parentSpanId = HexFormat.of().formatHex(span.getParentSpanId().toByteArray());
+                resource.addLiteral(parentSpanIdProperty, parentSpanId);
+                Resource parentResource = model.createResource(ontoUri + "span-" + tracedId + "-" + parentSpanId);
+                resource.addProperty(parentSpanProperty, parentResource);
+            }
 
             switch (span.getKind()) {
                 case SPAN_KIND_INTERNAL -> resource.addProperty(kindProperty, model.createResource(ontoUri + "SPAN_KIND_INTERNAL"));
