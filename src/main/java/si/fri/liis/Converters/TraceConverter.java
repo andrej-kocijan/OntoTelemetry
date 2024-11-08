@@ -103,6 +103,7 @@ public class TraceConverter extends Converter<TracesData> {
 
         Property spanProperty = model.createProperty(ontoUri, "Span");
         Property traceIdProperty = model.createProperty(ontoUri, "traceId");
+        Property traceProperty = model.createProperty(ontoUri, "trace");
         Property spanIdProperty = model.createProperty(ontoUri, "spanId");
         Property traceStateProperty = model.createProperty(ontoUri, "traceState");
         Property parentSpanIdProperty = model.createProperty(ontoUri, "parentSpanId");
@@ -129,6 +130,8 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addProperty(RDF.type, spanProperty);
 
             resource.addLiteral(traceIdProperty, tracedId);
+            Resource traceResource = model.createResource(ontoUri + "trace-" + tracedId);
+            resource.addProperty(traceProperty, traceResource);
             traceIds.add(tracedId);
 
             resource.addLiteral(spanIdProperty, spanId);
