@@ -9,7 +9,6 @@ import org.apache.jena.vocabulary.RDF;
 import si.fri.liis.Converters.Common.InstrumentationScopeConverter;
 import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
-import si.fri.liis.Helpers.TraceHelpers;
 
 import java.util.*;
 
@@ -99,7 +98,6 @@ public class TraceConverter extends Converter<TracesData> {
     private List<Resource> convertSpans(List<Span> spans) {
 
         ArrayList<Resource> resources = new ArrayList<>();
-        Set<String> traceIds = new HashSet<>();
 
         Property spanProperty = model.createProperty(ontoUri, "Span");
         Property traceIdProperty = model.createProperty(ontoUri, "traceId");
@@ -131,8 +129,8 @@ public class TraceConverter extends Converter<TracesData> {
 
             resource.addLiteral(traceIdProperty, tracedId);
             Resource traceResource = model.createResource(ontoUri + "trace-" + tracedId);
+            traceResource.addLiteral(traceIdProperty, tracedId);
             resource.addProperty(traceProperty, traceResource);
-            traceIds.add(tracedId);
 
             resource.addLiteral(spanIdProperty, spanId);
             resource.addLiteral(traceStateProperty, span.getTraceState());
@@ -170,7 +168,7 @@ public class TraceConverter extends Converter<TracesData> {
                 resource.addProperty(eventProperty, eventResource);
             resource.addLiteral(droppedEventsCountProperty, span.getDroppedEventsCount());
 
-            List<Resource> linkResources = linksConverter(span.getLinksList(), traceIds);
+            List<Resource> linkResources = linksConverter(span.getLinksList());
             for(Resource linkResource : linkResources)
                 resource.addProperty(linkProperty, linkResource);
             resource.addLiteral(droppedLinksCountProperty, span.getDroppedLinksCount());
@@ -179,12 +177,10 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addProperty(statusProperty, statusResource);
         }
 
-        TraceHelpers.CreateMissingTraces(traceIds, model, conn, ontoUri);
-
         return resources;
     }
 
-    public List<Resource> linksConverter(List<Span.Link> links, Set<String> traceIds) {
+    public List<Resource> linksConverter(List<Span.Link> links) {
 
         ArrayList<Resource> resources = new ArrayList<>();
 
@@ -202,7 +198,6 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addProperty(RDF.type, linkProperty);
 
             String tracedId = HexFormat.of().formatHex(link.getTraceId().toByteArray());
-            traceIds.add(tracedId);
             resource.addLiteral(traceIdProperty, tracedId);
 
             String spanId = HexFormat.of().formatHex(link.getSpanId().toByteArray());

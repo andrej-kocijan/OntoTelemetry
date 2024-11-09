@@ -11,17 +11,6 @@
 ## The OWL reasoner in Apache Jena Fuseki lacks support for some of the rules OWL 2 offers
 ## Those rules are therefore re-implemented here
 
-# Infer which spans are part of which trace, based on traceId
-# Reverse property is once again inferred by OWL reasoner
-[traceContainsSpan:
-    (?s rdf:type :Span)
-    (?t rdf:type :Trace)
-    (?s :traceId ?id)
-    (?t :traceId ?id)
-    ->
-    (?t :containsSpan ?s)
-]
-
 # Infer connection between a Link and the span it points to
 [spanLinkRule:
     (?span rdf:type :Span)
