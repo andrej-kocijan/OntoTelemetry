@@ -10,7 +10,10 @@ import si.fri.liis.Converters.Common.InstrumentationScopeConverter;
 import si.fri.liis.Converters.Common.KeyValueConverter;
 import si.fri.liis.Converters.Common.ResourceConverter;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HexFormat;
+import java.util.List;
+import java.util.UUID;
 
 public class TraceConverter extends Converter<TracesData> {
 
@@ -191,6 +194,7 @@ public class TraceConverter extends Converter<TracesData> {
         Property attributeProperty = model.createProperty(ontoUri, "attribute");
         Property droppedAttributesCountProperty = model.createProperty(ontoUri, "droppedAttributesCount");
         Property flagsProperty = model.createProperty(ontoUri, "flags");
+        Property linkedSpanProperty = model.createProperty(ontoUri, "linkedSpan");
 
         for (Span.Link link : links) {
 
@@ -202,6 +206,9 @@ public class TraceConverter extends Converter<TracesData> {
 
             String spanId = HexFormat.of().formatHex(link.getSpanId().toByteArray());
             resource.addLiteral(spanIdProperty, spanId);
+
+            Resource spanResource = model.createResource(ontoUri + "span-" + tracedId + "-" + spanId);
+            resource.addProperty(linkedSpanProperty, spanResource);
 
             resource.addLiteral(traceStateProperty, link.getTraceState());
 

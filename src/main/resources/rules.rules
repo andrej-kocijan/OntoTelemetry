@@ -5,24 +5,6 @@
 @prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
 @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
 
-## Include OWL rules
-@include <OWLMicro> .
-
-## The OWL reasoner in Apache Jena Fuseki lacks support for some of the rules OWL 2 offers
-## Those rules are therefore re-implemented here
-
-# Infer connection between a Link and the span it points to
-[spanLinkRule:
-    (?span rdf:type :Span)
-    (?link rdf:type :Link)
-    (?link :traceId ?tid)
-    (?link :spanId ?sid)
-    (?span :traceId ?tid)
-    (?span :spanId ?sid)
-    ->
-    (?link :linkedSpan ?span)
-]
-
 # Infer spans linked to one another via the Link class
 # The inverse is then inferred via the OWL reasoner
 [spanLinkingRule:
