@@ -171,7 +171,7 @@ public class TraceConverter extends Converter<TracesData> {
                 resource.addProperty(eventProperty, eventResource);
             resource.addLiteral(droppedEventsCountProperty, span.getDroppedEventsCount());
 
-            List<Resource> linkResources = linksConverter(span.getLinksList());
+            List<Resource> linkResources = linksConverter(span.getLinksList(), resource);
             for(Resource linkResource : linkResources)
                 resource.addProperty(linkProperty, linkResource);
             resource.addLiteral(droppedLinksCountProperty, span.getDroppedLinksCount());
@@ -183,7 +183,7 @@ public class TraceConverter extends Converter<TracesData> {
         return resources;
     }
 
-    public List<Resource> linksConverter(List<Span.Link> links) {
+    public List<Resource> linksConverter(List<Span.Link> links, Resource mainSpanResource) {
 
         ArrayList<Resource> resources = new ArrayList<>();
 
@@ -195,6 +195,7 @@ public class TraceConverter extends Converter<TracesData> {
         Property droppedAttributesCountProperty = model.createProperty(ontoUri, "droppedAttributesCount");
         Property flagsProperty = model.createProperty(ontoUri, "flags");
         Property linkedSpanProperty = model.createProperty(ontoUri, "linkedSpan");
+        Property linkedProperty = model.createProperty(ontoUri, "linked");
 
         for (Span.Link link : links) {
 
@@ -209,6 +210,7 @@ public class TraceConverter extends Converter<TracesData> {
 
             Resource spanResource = model.createResource(ontoUri + "span-" + tracedId + "-" + spanId);
             resource.addProperty(linkedSpanProperty, spanResource);
+            mainSpanResource.addProperty(linkedProperty, spanResource);
 
             resource.addLiteral(traceStateProperty, link.getTraceState());
 
