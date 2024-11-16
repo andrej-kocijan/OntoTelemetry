@@ -122,6 +122,8 @@ public class MetricConverter extends Converter<MetricsData> {
                 Resource metadataResource = (new KeyValueConverter(model, metadata)).getConvertedResource();
                 resource.addProperty(metadataProperty, metadataResource);
             }
+
+            resources.add(resource);
         }
 
         return resources;
@@ -384,6 +386,7 @@ public class MetricConverter extends Converter<MetricsData> {
                 resource.addProperty(quantileValueProperty, quantileResource);
             }
 
+            resources.add(resource);
         }
 
         return resources;

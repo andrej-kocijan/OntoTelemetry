@@ -2,11 +2,7 @@ package si.fri.liis.Helpers;
 
 import org.apache.jena.query.Query;
 import org.apache.jena.query.QueryFactory;
-import org.apache.jena.rdf.model.Resource;
-import org.apache.jena.rdfconnection.RDFConnectionFuseki;
 import org.apache.jena.shared.PrefixMapping;
-
-import java.util.List;
 
 public class QueryHelpers {
 
@@ -40,50 +36,4 @@ public class QueryHelpers {
         return QueryFactory.create(sb.toString());
     }
 
-    public static String createUpdate(String query) {
-
-        StringBuilder sb = new StringBuilder();
-        PrefixMapping prefixes = getPrefixes();
-
-        for (String prefix : prefixes.getNsPrefixMap().keySet()) {
-            sb.append("PREFIX ");
-            sb.append(prefix);
-            sb.append(": <");
-            sb.append(prefixes.getNsPrefixURI(prefix));
-            sb.append(">\n");
-        }
-
-        sb.append(query);
-
-        return sb.toString();
-    }
-
-    public static void mergeDuplicates(List<Resource> resources, RDFConnectionFuseki conn) {
-
-        if (resources.size() <= 1)
-            return;
-
-        String mainResource = resources.get(0).getLocalName();
-        for (int i = 1; i < resources.size(); i++) {
-
-            String toBeRemoved = resources.get(i).getLocalName();
-
-            String q2 = createUpdate(String.format("""
-                    DELETE { ?s ?p :%s }
-                    INSERT { ?s ?p :%s }
-                    WHERE {
-                        ?s ?p :%s .
-                        FILTER (?s != :%s)
-                    }
-                    """, toBeRemoved, mainResource, toBeRemoved, mainResource));
-
-            String q3 = createUpdate(String.format("""
-                    DELETE WHERE { :%s ?p ?o }
-                    """, toBeRemoved));
-
-            conn.update(q2);
-            conn.update(q3);
-        }
-
-    }
 }

@@ -178,6 +178,8 @@ public class TraceConverter extends Converter<TracesData> {
 
             Resource statusResource = statusConverter(span.getStatus());
             resource.addProperty(statusProperty, statusResource);
+
+            resources.add(resource);
         }
 
         return resources;
@@ -222,6 +224,8 @@ public class TraceConverter extends Converter<TracesData> {
             resource.addLiteral(droppedAttributesCountProperty, link.getDroppedAttributesCount());
 
             resource.addLiteral(flagsProperty, link.getFlags());
+
+            resources.add(resource);
         }
 
         return resources;
@@ -249,6 +253,8 @@ public class TraceConverter extends Converter<TracesData> {
                 resource.addProperty(attributeProperty, attributeResource);
             }
             resource.addLiteral(droppedAttributesCountProperty, event.getDroppedAttributesCount());
+
+            resources.add(resource);
         }
 
         return resources;
